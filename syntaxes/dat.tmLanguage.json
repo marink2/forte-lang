@@ -1,0 +1,89 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Forte Input",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#constant"
+		},
+		{
+			"include": "#number"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.operator.new.dat",
+					"match": "\\b(molecule|set)\\b[^\\{]*\\{"
+				}
+			]
+		},
+		"strings": {
+			"patterns": [
+				{
+					"name": "string.quoted.double.dat",
+					"begin": "\"",
+					"end": "\"",
+					"patterns": [
+						{
+							"name": "constant.character.escape.dat",
+							"match": "\\\\."
+						}
+					]
+				},
+				{
+					"name": "string.quoted.single.dat",
+					"begin": "'",
+					"end": "'",
+					"patterns": [
+						{
+							"name": "constant.character.escape.dat",
+							"match": "\\\\."
+						}
+					]
+				}
+			]
+		},
+		"constant": {
+			"name": "constant.language.dat",
+			"match": "\\b(?:true|false|True|False)\\b"
+		},
+		"number": {
+			"name": "constant.numeric.dat",
+			"match": "(?x) \\b -? (?: [0-9] \\d*    (?: [eE] [+-]? \\d+ )?   ) (?: \\. \\d+    (?: [eE] [+-]? \\d+ )?    )? \\b"
+		},
+		"comments": {
+			"patterns": [
+				{
+					"name": "constant.language.dat",
+					"begin": "==>",
+					"end": "<==",
+					"captures": {
+						"0": {
+							"name": "constant.language.dat"
+						}
+					}
+				},
+				{
+					"name": "comment.line.number-sign.dat",
+					"match": "(#).*$\\n?",
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.comment.dat"
+						}
+					}
+				}
+			]
+		}
+	},
+	"scopeName": "source.python.dat"
+}

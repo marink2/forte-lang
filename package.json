@@ -1,0 +1,34 @@
+{
+  "name": "forte-lang",
+  "displayName": "forte-lang",
+  "description": "Language support for Forte input.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.89.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "dat",
+        "aliases": [
+          "Forte Input",
+          "dat"
+        ],
+        "extensions": [
+          ".dat"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "dat",
+        "scopeName": "source.python.dat",
+        "path": "./syntaxes/dat.tmLanguage.json"
+      }
+    ]
+  }
+}
