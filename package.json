@@ -29,6 +29,12 @@
         "scopeName": "source.python.dat",
         "path": "./syntaxes/dat.tmLanguage.json"
       }
+    ],
+    "snippets": [
+      {
+        "language": "dat",
+        "path": "./snippets/dat.code-snippets"
+      }
     ]
   }
 }

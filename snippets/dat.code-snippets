@@ -1,0 +1,41 @@
+{
+  "Forte Options": {
+    "prefix": [
+      "set forte"
+    ],
+    "body": [
+      "set forte {",
+      "\tactive_space_solver                             genci",
+      "}\n",
+      "E_forte, wfn_forte = energy('forte', return_wfn=True, ref_wfn=wfn_hf)"
+    ],
+    "description": "forte options block"
+  },
+  "SCF Block": {
+    "prefix": [
+      "set"
+    ],
+    "body": [
+      "set {",
+      "\tscf_type                                        df",
+      "\tbasis                                           cc-pvdz-dk",
+      "\treference                                       rohf",
+      "\trelativistic                                    x2c",
+      "}\n",
+      "E_hf, wfn_hf = energy('scf', return_wfn=True)"
+    ],
+    "description": "set basic scf calculation block"
+  },
+  "Mol Block": {
+    "prefix": [
+      "molecule"
+    ],
+    "body": [
+      "molecule myMol {",
+      "0 1",
+      "\tH      0.0000      0.0000      0.0000",
+      "}"
+    ],
+    "description": "set basic molecule block"
+  },
+}

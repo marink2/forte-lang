@@ -16,6 +16,12 @@
 		},
 		{
 			"include": "#number"
+		},
+		{
+			"include": "#function"
+		},
+		{
+			"include": "#variable-assignment"
 		}
 	],
 	"repository": {
@@ -55,7 +61,7 @@
 		},
 		"constant": {
 			"name": "constant.language.dat",
-			"match": "\\b(?:true|false|True|False)\\b"
+			"match": "\\b(?:True|False)\\b"
 		},
 		"number": {
 			"name": "constant.numeric.dat",
@@ -83,6 +89,27 @@
 					}
 				}
 			]
+		},
+		"function": {
+			"patterns": [
+				{
+					"name": "keyword.function.dat",
+					"match": "(\\b[A-Za-z_][A-Za-z0-9_]*\\b)\\s*\\(",
+					"captures": {
+						"1": {
+							"name": "entity.name.function.dat"
+						}
+					}
+				},
+				{
+					"name": "variable.parameter.dat",
+					"match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b(?=\\s*=|\\s*\\))"
+				}
+			]
+		},
+		"variable-assignment": {
+			"name": "variable.parameter.dat",
+			"match": "\\b(\\w+\\s*,\\s*)*\\w+\\b(?=\\s*=)"
 		}
 	},
 	"scopeName": "source.python.dat"
