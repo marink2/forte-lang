@@ -6,6 +6,7 @@
     "type": "git",
     "url": "https://github.com/marink2/forte-lang.git"
   },
+  "author": "marink2",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.89.0"
