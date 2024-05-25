@@ -2,6 +2,10 @@
   "name": "forte-lang",
   "displayName": "forte-lang",
   "description": "Language support for Forte input.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marink2/forte-lang.git"
+  },
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.89.0"
