@@ -6,7 +6,11 @@ This extension offers syntax highlighting and useful snippets for `.dat` input f
 
 * Sintax highlighting
 
+![](./assets/feature_highlight.gif)
+
 * Snippets
+
+![](./assets/feature_snippets.gif)
 
 ### 0.0.1
 

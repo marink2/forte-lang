@@ -7,7 +7,7 @@
       "set forte {",
       "\tactive_space_solver                             ${1:genci}",
       "}\n",
-      "E_${4:forte}, wfn_${3:forte} = energy('forte', return_wfn=True, ref_wfn=${2:wfn_hf)}"
+      "E_${4:forte}, wfn_${3:forte} = energy('forte', return_wfn=True, ref_wfn=${2:wfn_hf})"
     ],
     "description": "forte options block"
   },
