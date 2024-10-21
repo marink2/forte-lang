@@ -43,5 +43,8 @@
         "path": "./snippets/dat.code-snippets"
       }
     ]
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
   }
 }
