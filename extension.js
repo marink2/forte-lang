@@ -94,10 +94,11 @@ function formatTextInsideBraces(text) {
     return text.replace(braceContentPattern, (match) => {
         // Extract the content inside the braces
         const braceContent = match.match(/\{([^}]*)\}/m)[1];
-        const lines = braceContent.split('\n').map(line => line.trim()).filter(Boolean);
+        const lines = braceContent.split('\n').map(line => line.trim());
 
         // Format [ [word1], [word2, word3, ...] ] pairs
         const formattedLines = lines.map(line => {
+            if (line === '') { return '' }
             const [key, ...rest] = line.split(/\s+/);
             const value = rest.join(' ');
 
@@ -106,7 +107,7 @@ function formatTextInsideBraces(text) {
         });
 
         // Reconstruct the block with formatted lines
-        return match.replace(braceContent, `\n${formattedLines.join('\n')}\n`);
+        return match.replace(braceContent, `${formattedLines.join('\n')}`);
     });
 }
 

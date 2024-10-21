@@ -51,8 +51,8 @@
 				},
 				{
 					"name": "string.quoted.single.dat",
-					"begin": "'",
-					"end": "'",
+					"begin": "(?<!\\w)'",
+					"end": "'(?!\\w)",
 					"patterns": [
 						{
 							"name": "constant.character.escape.dat",
@@ -116,7 +116,15 @@
 		},
 		"irreps": {
 			"name": "constant.character.escape.dat",
-			"match": "\\b(?:[0-9]*[AB][1-3]*[UuGgPp]|[0-9]*App|[0-9]*APP)\\b"
+			"match": "\\b(\\d+)?([AB][1-3]|[A][GgUu]|[B][1-3][GgUu]|[A][Pp]{1,2})\\b",
+			"captures": {
+				"1": {
+					"name": "invalid.dat"
+				},
+				"2": {
+					"name": "invalid.dat"
+				}
+			}
 		}
 	},
 	"scopeName": "source.python.dat"
