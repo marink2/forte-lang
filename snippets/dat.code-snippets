@@ -1,53 +1,55 @@
 {
-  "Forte-Block": {
+  "GAS-DSRG_Block": {
     "prefix": [
-      "fset"
+      "_forte_"
     ],
     "body": [
       "set forte {",
-      "\tactive_space_solver                             ${1:genci}",
+      "\tactive_space_solver      ${1:genci}",
       "}\n",
       "E_${4:forte}, wfn_${3:forte} = energy('forte', return_wfn=True, ref_wfn=${2:wfn_hf})"
     ],
-    "description": "forte options block"
+    "description": "set basic gas-dsrg calculation block"
   },
-  "SCF-Block": {
+  "SCF_Block": {
     "prefix": [
-      "set"
+      "_scf_"
     ],
     "body": [
       "set {",
-      "\tscf_type                                        ${1:df}",
-      "\tbasis                                           ${2:cc-pvdz-dk}",
-      "\treference                                       ${3:rohf}",
-      "\trelativistic                                    ${4:x2c}",
+      "\tscf_type           ${1:df}",
+      "\tbasis              ${2:cc-pvdz-dk}",
+      "\treference          ${3:rohf}",
+      "\trelativistic       ${4:x2c}",
       "}\n",
       "E_hf, wfn_hf = energy('scf', return_wfn=True)"
     ],
     "description": "set basic scf calculation block"
   },
-  "Mol-Block": {
+  "Mol_Block": {
     "prefix": [
-      "mol"
+      "_mol_"
     ],
     "body": [
       "molecule ${1:name} {",
       "${2:charge} ${3:mult}",
       "\tH      0.0000      0.0000      0.0000",
+      "units bohr",
+      "noreorient",
       "}"
     ],
     "description": "set basic molecule block"
   },
-  "Cube-Block": {
+  "Cube_Block": {
     "prefix": [
-      "cube"
+      "_cube_"
     ],
     "body": [
       "set {",
-      "\tcubeprop_filepath                               ./${1:cubes_dir}",
-      "\tcubeprop_orbitals                               ${2:[1, ..., n]}",
+      "\tcubeprop_filepath            ./${1:cubes}",
+      "\tcubeprop_orbitals            [${2:1, ..., n}]",
       "}\n",
-      "cubeprop(${3:wfn_})"
+      "cubeprop(wfn_${3:})"
     ],
     "description": "set option block to print cubes files"
   }
