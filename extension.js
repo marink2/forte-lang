@@ -87,6 +87,46 @@ class DatHoverProvider {
     }
 }
 
+function formatTextInsideBraces(text) {
+    // Match 'set { ... }' or 'set forte { ... }' blocks
+    const braceContentPattern = /(set\s+forte\s*\{[^}]*\}|set\s*\{[^}]*\})/gmi;
+
+    return text.replace(braceContentPattern, (match) => {
+        // Extract the content inside the braces
+        const braceContent = match.match(/\{([^}]*)\}/m)[1];
+        const lines = braceContent.split('\n').map(line => line.trim()).filter(Boolean);
+
+        // Format [ [word1], [word2, word3, ...] ] pairs
+        const formattedLines = lines.map(line => {
+            const [key, ...rest] = line.split(/\s+/);
+            const value = rest.join(' ');
+
+            // Format spacing
+            return `  ${key}${' '.repeat(Math.max(1, 60 - key.length))}${value}`;
+        });
+
+        // Reconstruct the block with formatted lines
+        return match.replace(braceContent, `\n${formattedLines.join('\n')}\n`);
+    });
+}
+
+class DatDocumentFormatter {
+    provideDocumentFormattingEdits(document) {
+        const edits = [];
+        const fullRange = new vscode.Range(
+            document.positionAt(0),
+            document.positionAt(document.getText().length)
+        );
+        const text = document.getText();
+
+        const formattedText = formatTextInsideBraces(text);
+
+        edits.push(vscode.TextEdit.replace(fullRange, formattedText));
+
+        return edits;
+    }
+}
+
 function activate(context) {
     const provider = new DatCompletionProvider();
     const providerDisposable = vscode.languages.registerCompletionItemProvider({ language: 'dat' }, provider, '.');
@@ -95,10 +135,13 @@ function activate(context) {
     const hoverProvider = new DatHoverProvider();
     const hoverProviderDisposable = vscode.languages.registerHoverProvider({ language: 'dat' }, hoverProvider);
     context.subscriptions.push(hoverProviderDisposable);
+
+    const formatter = new DatDocumentFormatter();
+    const disposable = vscode.languages.registerDocumentFormattingEditProvider({ language: 'dat' }, formatter);
+    context.subscriptions.push(disposable);
 }
 
-function deactivate() {
-}
+function deactivate() { }
 
 module.exports = {
     activate,
