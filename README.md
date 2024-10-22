@@ -1,6 +1,6 @@
 # forte-lang <img src="./logo.png" width="100" style="vertical-align: middle;" />
 
-This extension offers syntax highlighting and useful snippets for `.dat` input files used by the Forte [[1]](#1) plugin of the Psi4 [[2]](#2) quantum chemistry package.
+This extension offers syntax highlighting, code snippets, option auto-completion and more  for `.dat` input files used by the Forte [[1]](#1) plugin of the Psi4 [[2]](#2) quantum chemistry package.
 
 ## Features
 
@@ -12,7 +12,23 @@ This extension offers syntax highlighting and useful snippets for `.dat` input f
 
 ![](./assets/feature_snippets.gif)
 
-### 0.0.1
+* Forte options auto-completion and hover-over
+
+![](./assets/feature_completion.gif)
+
+* Reformatting for option blocks
+
+![](./assets/feature_reformatting.gif)
+
+### Version History
+
+#### 0.0.2
+
+* Added auto-completion and hover-over for Forte options
+* Added reformatting for `set { ... }` and `set forte { ... }` option blocks
+* Improvements to snippets and highlighting
+
+#### 0.0.1
 
 Initial release of forte-lang
 
