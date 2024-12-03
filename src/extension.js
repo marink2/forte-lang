@@ -4,17 +4,17 @@ const DatHoverProvider = require('./DatHoverProvider');
 const DatDocumentFormatter = require('./DatDocumentFormatter');
 
 function activate(context) {
-    const provider = new DatCompletionProvider();
-    const providerDisposable = vscode.languages.registerCompletionItemProvider({ language: 'dat' }, provider, '.');
-    context.subscriptions.push(providerDisposable);
+    const autoCompletion = new DatCompletionProvider();
+    const autoCompletionDisposable = vscode.languages.registerCompletionItemProvider({ language: 'dat' }, autoCompletion, '.');
+    context.subscriptions.push(autoCompletionDisposable);
 
-    const hoverProvider = new DatHoverProvider();
-    const hoverProviderDisposable = vscode.languages.registerHoverProvider({ language: 'dat' }, hoverProvider);
-    context.subscriptions.push(hoverProviderDisposable);
+    const hover = new DatHoverProvider();
+    const hoverDisposable = vscode.languages.registerHoverProvider({ language: 'dat' }, hover);
+    context.subscriptions.push(hoverDisposable);
 
     const formatter = new DatDocumentFormatter();
-    const disposable = vscode.languages.registerDocumentFormattingEditProvider({ language: 'dat' }, formatter);
-    context.subscriptions.push(disposable);
+    const formatterDisposable = vscode.languages.registerDocumentFormattingEditProvider({ language: 'dat' }, formatter);
+    context.subscriptions.push(formatterDisposable);
 }
 
 function deactivate() { }
