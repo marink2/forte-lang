@@ -42,7 +42,32 @@
         "language": "dat",
         "path": "./snippets/dat.code-snippets"
       }
-    ]
+    ],
+    "commands": [
+      {
+        "command": "extension.plotOrbitals",
+        "title": "Plot Orbitals"
+      },
+      {
+        "command": "extension.HeyListen",
+        "title": "It's dangerous to go alone! Take this! 🗡️"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "extension.plotOrbitals",
+        "key": "ctrl+o",
+        "mac": "cmd+o"
+      }
+    ],
+    "menus": {
+      "webview/context": [
+        {
+          "command": "extension.HeyListen",
+          "when": "webviewId == OrbPlotter"
+        }
+      ]
+    }
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
