@@ -2,7 +2,6 @@ const vscode = require('vscode');
 const fs = require('fs');
 
 function plotOrbitals(cubeFiles, extensionUri, folderName, iconPath) {
-
     const panel = vscode.window.createWebviewPanel(
         'OrbPlotter',
         folderName,
@@ -15,22 +14,42 @@ function plotOrbitals(cubeFiles, extensionUri, folderName, iconPath) {
 
     panel.iconPath = iconPath;
 
-    Promise.all(
-        cubeFiles.map((cubeFile) =>
-            fs.promises.readFile(cubeFile, 'utf8').then(parseCubeFile)
-        )
-    )
-        .then((allCubeData) => {
-            const scriptUri = panel.webview.asWebviewUri(
-                vscode.Uri.joinPath(extensionUri, 'src', 'script.js')
-            );
-            panel.webview.html = getWebviewContent(allCubeData, scriptUri);
-        })
-        .catch((err) => {
-            vscode.window.showErrorMessage(`Failed to read .cube files: ${err.message}`);
-        });
+    // Show a progress notification while loading the data
+    vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            title: "Orbital Plotter",
+            cancellable: false
+        },
+        async (progress) => {
+            try {
+                // Update progress message (optional, useful for long tasks)
+                progress.report({ message: "Reading .cube files..." });
 
+                // Read all .cube files and parse them
+                const allCubeData = await Promise.all(
+                    cubeFiles.map((cubeFile) =>
+                        fs.promises.readFile(cubeFile, 'utf8').then(parseCubeFile)
+                    )
+                );
+
+                progress.report({ message: "Rendering orbitals..." });
+
+                // Prepare the webview content
+                const scriptUri = panel.webview.asWebviewUri(
+                    vscode.Uri.joinPath(extensionUri, 'src', 'script.js')
+                );
+                panel.webview.html = getWebviewContent(allCubeData, scriptUri);
+
+                // Finish progress
+                progress.report({ message: "Done!" });
+            } catch (err) {
+                vscode.window.showErrorMessage(`Failed to read .cube files: ${err.message}`);
+            }
+        }
+    );
 }
+
 
 
 function parseCubeFile(cFileData) {
@@ -94,12 +113,12 @@ function parseCubeFile(cFileData) {
         orbDensity += Math.abs(voxelVectors[v][3]);
 
         // Break when the condition is met
-        if (orbDensity > 0.86 * totAbsDensity) {
+        if (orbDensity > 0.6 * totAbsDensity) {
             break;
         }
 
         // Skip if below the threshold
-        if (orbDensity < 0.80 * totAbsDensity) {
+        if (orbDensity < 0.0 * totAbsDensity) {
             continue;
         }
 

@@ -1,265 +1,135 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
-import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-const atomColor = [
-    0xb8b4b4, // bond color
-    0xe0e0e0, // H
-    0xc3f7f6, // He
-    0xd3a8ed, // Li
-    0xb7eda1, // Be
-    0xf5b8bf, // B
-    0x2e2d2d, // C
-    0x2f41ba, // N
-    0xde1f0d, // O
-    0x1bf534  // F
+const MOL_ROT_SPEED = 0.01;
+const MOL_STICK_REP = false;
+const BOND_CUTOFF = 2.8;
+const BOND_RADIUS = 0.25;
+const ATOM_SCALE = 0.25;
+const ATOM_COLOR = [
+    0xb8b4b4,   // Bond Color
+    0xe0e0e0,   // H
+    0xc3f7f6,   // He
+    0xd3a8ed,   // Li
+    0xb7eda1,   // Be
+    0xf5b8bf,   // B
+    0x2e2d2d,   // C
+    0x2f41ba,   // N
+    0xde1f0d,   // O
+    0x1bf534    // F
 ];
-
-const test_molData = [
-    [
-        [6, 0.000000, 0.000000, -0.125241],
-        [1, 0.000000, 1.423056, 0.993829],
-        [1, 0.000000, -1.423056, 0.993829]
-    ],
-    [
-        [7, 0.000000, 0.000000, -0.125241],
-        [1, 0.000000, 1.423056, 0.993829],
-        [1, 0.000000, -1.423056, 0.993829]
-    ],
-    [
-        [8, 0.000000, 0.000000, -0.125241],
-        [1, 0.000000, 1.423056, 0.993829],
-        [1, 0.000000, -1.423056, 0.993829]
-    ],
-    [
-        [9, 0.000000, 0.000000, -0.125241],
-        [1, 0.000000, 1.423056, 0.993829],
-        [1, 0.000000, -1.423056, 0.993829]
-    ]];
 
 function main() {
 
+    //###########################
+    //##  Renderers
+    //###########################
+
     const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#c') });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
 
     const labelRenderer = new CSS2DRenderer();
     labelRenderer.setSize(window.innerWidth, window.innerHeight);
-    labelRenderer.domElement.style.position = 'fixed';
     labelRenderer.domElement.style.top = '0px';
-    labelRenderer.domElement.style.pointerEvents = 'none';
+    labelRenderer.domElement.style.position = 'fixed';
     document.body.appendChild(labelRenderer.domElement);
+
+    //###########################
+    //##  Scene and Lighting
+    //###########################
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
 
-    const light = new THREE.AmbientLight(0xFFFFFF, 2);
-    // light.position.set(-1, 2, 4);
+    const light = new THREE.AmbientLight(0xffffff, 6);
     scene.add(light);
 
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    //###########################
+    //##  Plotting
+    //###########################
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 0, 60);
-
-    let width = 0
-    let height = 0
-    // responsive
-    function resize() {
-        width = window.innerWidth
-        height = window.innerHeight
-        camera.aspect = width / height
-        const target = new THREE.Vector3(0, 0, 0)
-        const distance = camera.position.distanceTo(target)
-        const fov = (camera.fov * Math.PI) / 180
-        const viewportHeight = 2 * Math.tan(fov / 2) * distance
-        const viewportWidth = viewportHeight * (width / height)
-        camera.updateProjectionMatrix()
-        renderer.setSize(width, height)
-        scene.traverse((obj) => {
-            if (obj.onResize) obj.onResize(viewportWidth, viewportHeight, camera.aspect)
-        })
-    }
-
-    window.addEventListener('resize', resize)
-    resize()
-
-
+    window.plotWidth = 0;
+    window.plotHeight = 0;
     const allCubeData = window.allCubeData;
     const plotObjects = allCubeData.map((cubeData, i) => {
         const MolOrb = makeMolOrb(cubeData);
-        MolOrb.name = i;
-        MolOrb.userData.customID = 0;
-        const [BoundingBox, BBHelper] = getBoundingBox(MolOrb);
-        // MolOrb.add(BBHelper);
         scene.add(MolOrb);
 
-        return [MolOrb, BoundingBox, 0, new THREE.Vector3(0, 0, 0)];
+        window.plotWidth = Math.max(MolOrb.userData.plotSep, window.plotWidth);
+        window.plotHeight += MolOrb.userData.plotSep;
+
+        return MolOrb;
     });
 
-    initOrderPlot(plotObjects)
-
-
-    let eventListen = false;
-    const gui = new GUI();
-    const displayFolder = gui.addFolder('Displays'); // Create a folder called "Displays"
-
-    // Iterate over plotGroup.children backwards
-    for (let i = plotObjects.length - 1; i >= 0; i--) {
-        let toggBool = true;
-
-        // Create a display object for each child
-        const display = {
-            toggHide: function () {
-                // Shift the child along the X-axis
-                plotObjects[i][2] = toggBool ? 1 : 0;
-                // Toggle the state
-                toggBool = !toggBool;
-                console.log(toggBool ? `Child ${i + 1} shifted to the left` : `Child ${i + 1} shifted to the right`);
-                eventListen = true;
-            }
-        };
-
-        // Add the toggle button under the "Displays" folder
-        displayFolder.add(display, 'toggHide').name(`<span style="color: cyan;">(un-hide all) ${i + 1}</span>`);
+    orderPlot(plotObjects);
+    let initMove = movePlot(plotObjects);
+    while (initMove.every(value => value !== 1)) {
+        initMove = movePlot(plotObjects);
     }
 
-    displayFolder.open(); // Open the folder by default
+    //###########################
+    //##  Camera
+    //###########################
 
-    // let toggBool = true;
-    // let hovered = {};
-    // let raycaster = new THREE.Raycaster();
+    const camera = new THREE.OrthographicCamera();
+    function resize() {
+        camera.top = window.innerHeight;
+        camera.bottom = -window.innerHeight;
+        camera.left = -window.innerWidth;
+        camera.right = window.innerWidth;
+        camera.zoom = 20;
+
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    //###########################
+    //##  Event Listeners
+    //###########################
+
+
+    let raycaster = new THREE.Raycaster();
     let mouse = new THREE.Vector2();
-
-    // // Create a mapping of MolGroups and their bounding boxes
-    // let boundingBoxes = {};
-
-    // // Initialize bounding boxes for all MolGroups
-    // scene.children.forEach((child) => {
-    //     if (child.name && plotObjects[parseInt(child.name, 10)]) {
-    //         // Compute the bounding box
-    //         const box = new THREE.Box3().setFromObject(child);
-
-    //         // Check if the bounding box is valid (not empty)
-    //         if (!box.isEmpty()) {
-    //             boundingBoxes[child.name] = box;
-    //         } else {
-    //             console.warn(`Bounding box for ${child.name} is empty.`);
-    //         }
-    //     }
-    // });
-
-    // // Update raycaster based on pointer movements
-    // window.addEventListener('pointermove', (e) => {
-    //     mouse.set(
-    //         (e.clientX / window.innerWidth) * 2 - 1,
-    //         -(e.clientY / window.innerHeight) * 2 + 1
-    //     );
-    //     raycaster.setFromCamera(mouse, camera);
-    //     const intersects = raycaster.intersectObjects(scene.children, true);
-
-    //     // Handle hovered items
-    //     Object.keys(hovered).forEach((key) => {
-    //         if (!intersects.some((hit) => hit.object.uuid === key)) {
-    //             delete hovered[key]; // Remove if no longer hovered
-    //         }
-    //     });
-
-    //     intersects.forEach((hit) => {
-    //         if (!hovered[hit.object.uuid]) {
-    //             hovered[hit.object.uuid] = hit; // Mark as hovered
-    //         }
-    //     });
-    // });
-
-    // // Handle clicks
-    // window.addEventListener('click', (e) => {
-    //     const pointer = new THREE.Vector2(
-    //         (e.clientX / window.innerWidth) * 2 - 1,
-    //         -(e.clientY / window.innerHeight) * 2 + 1
-    //     );
-
-    //     raycaster.setFromCamera(pointer, camera);
-    //     const ray = raycaster.ray;
-
-    //     // Iterate over MolGroups and their bounding boxes
-    //     for (const [name, box] of Object.entries(boundingBoxes)) {
-    //         const molGroup = scene.children.find((child) => child.name === name);
-
-    //         if (box && box.intersectsRay(ray)) { // Ensure box exists and check intersection
-    //             console.log(
-    //                 `MolGroup clicked! Name: ${molGroup.name}, ID: ${molGroup.userData.customID}`
-    //             );
-
-    //             // Update the corresponding plotObjects value
-    //             plotObjects[parseInt(name, 10)][2] = toggBool ? 1 : 0;
-    //             toggBool = !toggBool; // Toggle the state
-
-    //             break; // Only handle one MolGroup per click
-    //         }
-    //     }
-    // });
-
-
-
-
-
-    // // Handle clicks
-    // window.addEventListener('click', (e) => {
-    //     raycaster.setFromCamera(mouse, camera);
-    //     intersects = raycaster.intersectObjects(scene.children, true);
-
-    //     intersects.forEach((hit) => {
-    //         let parent = hit.object; // Start with the clicked object
-    //         while (parent.parent && parent.parent.type !== 'Scene') {
-    //             parent = parent.parent; // Move up the hierarchy
-    //         }
-    //         console.log(`Outermost Parent name: ${parent.name}, Parent ID: ${parent.userData.customID}`);
-
-    //         // Shift the child along the X-axis
-    //         plotObjects[parseInt(parent.name, 10)][2] = toggBool ? 1 : 0;
-    //         // Toggle the state
-    //         toggBool = !toggBool;
-    //         // console.log(toggBool ? `Child ${i + 1} shifted to the left` : `Child ${i + 1} shifted to the right`);
-    //         eventListen = true;
-
-    //     });
-    // });
-
-
-
-
-
-
-
-
-
+    let lastMouse = new THREE.Vector2();
 
     let isDragging = false;
-    // let mouse = { x: 0, y: 0 };
-    let lastMouse = { x: 0, y: 0 };
-    let rotationSpeed = 0.01; // Adjust for sensitivity
+    let eventListen = false;
 
-    // Event Listeners
-    document.addEventListener("mousedown", onMouseDown, false);
-    document.addEventListener("mouseup", onMouseUp, false);
-    document.addEventListener("mousemove", onMouseMove, false);
+    window.addEventListener('mousedown', (event) => {
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(scene.children, true);
 
+        if (intersects.length > 0) {
+            let headParent = intersects[0].object;
+            while (headParent.name !== 'MolOrb') {
+                headParent = headParent.parent;
+            }
 
-    function onMouseDown(event) {
+            headParent.userData.plotVis ^= true;
+            eventListen ^= true;
+        }
+    });
+
+    document.addEventListener("mousedown", (event) => {
         isDragging = true;
         lastMouse.x = event.clientX;
         lastMouse.y = event.clientY;
-    }
+    });
 
-    function onMouseUp() {
+    document.addEventListener("mouseup", (event) => {
         isDragging = false;
-    }
+    });
 
-    function onMouseMove(event) {
+    document.addEventListener("mousemove", (event) => {
         if (!isDragging) return;
 
         // Calculate the change in mouse position
@@ -270,35 +140,30 @@ function main() {
         lastMouse.x = event.clientX;
         lastMouse.y = event.clientY;
 
-        // Rotate the cubes based on mouse movement
+        // Rotate the plot objects based on mouse movement
         plotObjects.forEach(object => {
-            object[0].rotation.y += deltaX * rotationSpeed;
-            object[0].rotation.x += deltaY * rotationSpeed;
+            object.rotation.y += deltaX * MOL_ROT_SPEED;
+            object.rotation.x += deltaY * MOL_ROT_SPEED;
         });
-    }
+    });
 
 
 
     let animateMove = false;
-    function render(time) {
-        time *= 0.001;
-
+    function render() {
         if (eventListen) {
             console.log("event Activated");
-            orderPlot(plotObjects); // Assume this function is defined elsewhere
+            orderPlot(plotObjects);
             animateMove = true;
             eventListen = false;
-            // Reset progress for movePlot to ensure animation starts fresh
             movePlot.progress = plotObjects.map(() => 0);
         }
 
         if (animateMove) {
             const doneMoving = movePlot(plotObjects);
 
-            // Check if all objects are done moving
             if (doneMoving.every(value => value === 1)) {
                 animateMove = false;
-                console.log("done Moving");
             }
         }
 
@@ -338,211 +203,117 @@ function movePlot(objects) {
         movePlot.progress = objects.map(() => 0);
     }
 
-    const deltaTime = 0.016; // Approximate time step for 60 FPS
+    const deltaTime = 0.016;
 
-    const boolList = Array(objects.length).fill(0); // Initialize a list of zeros
+    const boolList = Array(objects.length).fill(0);
 
-    for (let i = 0; i < objects.length; i++) {
-        const mesh = objects[i][0]; // The mesh object to move
-        const targetPosition = objects[i][3]; // Final position
+    objects.forEach((MolOrb, i) => {
+        const targetPosition = MolOrb.userData.plotMoveTo;
 
         // Update progress
         movePlot.progress[i] = Math.min(movePlot.progress[i] + deltaTime / duration, 1);
         const progress = movePlot.progress[i];
 
         // Move the mesh closer to the target position with bezier movement
-        const newPosition = moveTowardsBezier(mesh.position, targetPosition, progress);
-        mesh.position.copy(newPosition);
+        const newPosition = moveTowardsBezier(MolOrb.position, targetPosition, progress);
+        MolOrb.position.copy(newPosition);
 
         // Check if the mesh has reached the target position
         if (progress >= 1) {
             boolList[i] = 1; // Mark as done
         }
-    }
+    });
 
     return boolList;
 }
 
 
 function orderPlot(objects) {
-    let totalHeight1 = 0;
-    let totalHeight2 = 0;
+    let maxBounds = 0;
+    let yOffsetL = 0;
+    let yOffsetR = 0;
+    let totHeightL = 0;
+    let totHeightR = 0;
 
-    let yOffset1 = 0;
-    let yOffset2 = 0;
-
-    let xOffset = 0;
-    let zOffset = -20;
-
-    for (let i = 0; i < objects.length; i++) {
-        const size = objects[i][1].min.distanceTo(objects[i][1].max);
-        if (size > xOffset) {
-            xOffset = size;
-        }
-    }
-
-    for (let i = 0; i < objects.length; i++) {
-        const size = objects[i][1].min.distanceTo(objects[i][1].max);
-        const mp = size / 2;
-        if (objects[i][2] == 0) {
-            objects[i][3].set(-xOffset, mp + yOffset1, zOffset);
-            yOffset1 = yOffset1 + size;
-            totalHeight1 = totalHeight1 + size;
+    objects.forEach(MolOrb => {
+        const size = MolOrb.userData.plotSep;
+        if (size > maxBounds) {
+            maxBounds = size;
         }
 
-        if (objects[i][2] == 1) {
-            objects[i][3].set(0, mp + yOffset2, 0);
-            yOffset2 = yOffset2 + size;
-            totalHeight2 = totalHeight2 + size;
+        if (MolOrb.userData.plotVis) {
+            totHeightL += size;
+        } else {
+            totHeightR += size;
         }
-    }
+    });
 
 
-    const recenter1 = totalHeight1 / 2;
-    const recenter2 = totalHeight2 / 2;
-    for (let i = 0; i < objects.length; i++) {
-        const currentY = objects[i][3].y;
-
-        if (objects[i][2] == 0) {
-            objects[i][3].set(-xOffset, currentY - recenter1, zOffset);
+    objects.forEach(MolOrb => {
+        const size = MolOrb.userData.plotSep;
+        if (MolOrb.userData.plotVis) {
+            MolOrb.userData.plotMoveTo.set(-0.5 * maxBounds, (0.5 * size + yOffsetL) - (0.5 * totHeightL), -maxBounds);
+            yOffsetL = yOffsetL + size;
+        } else {
+            MolOrb.userData.plotMoveTo.set(0.5 * maxBounds, (0.5 * size + yOffsetR) - (0.5 * totHeightR), -maxBounds);
+            yOffsetR = yOffsetR + size;
         }
-        if (objects[i][2] == 1) {
-            objects[i][3].set(0, currentY - recenter2, 0);
-        }
-    }
-}
+    });
 
-
-function initOrderPlot(objects) {
-    let yOffset = 0;
-    let totalHeight = 0;
-
-    let xOffset = 0;
-    let zOffset = -20;
-
-    for (let i = 0; i < objects.length; i++) {
-        const size = objects[i][1].min.distanceTo(objects[i][1].max);
-        if (size > xOffset) {
-            xOffset = size;
-        }
-    }
-
-    for (let i = 0; i < objects.length; i++) {
-        const size = objects[i][1].min.distanceTo(objects[i][1].max);
-        const mp = size / 2;
-        objects[i][0].position.set(-xOffset, mp + yOffset, zOffset)
-        objects[i][3].set(-xOffset, mp + yOffset, zOffset);
-        yOffset = yOffset + size;
-        totalHeight = totalHeight + size;
-    }
-
-    for (let i = 0; i < objects.length; i++) {
-        const recenter = totalHeight / 2;
-        const currentY = objects[i][3].y;
-        objects[i][0].position.set(-xOffset, currentY - recenter, zOffset)
-        objects[i][3].set(-xOffset, currentY - recenter, zOffset);
-    }
-}
-
-
-
-
-
-
-
-function getBoundingBox(object) {
-    const boundingBox = new THREE.Box3();
-    boundingBox.setFromObject(object);
-
-    const BBHelper = new THREE.Box3Helper(boundingBox, 0xffff00);
-
-    return [boundingBox, BBHelper];
 }
 
 function makeMolOrb(cubeData) {
-    const [atoms, orbVoxels, labels] = cubeData;
+    const [atoms, orbVoxels, label] = cubeData;
 
     const MolOrb = new THREE.Group();
+    MolOrb.name = "MolOrb";
+    MolOrb.userData.plotVis = false;
+    MolOrb.userData.plotMoveTo = new THREE.Vector3();
 
+    const irrepTag = makeIrrepTag(label);
     const atomGroup = makeAtomGroup(atoms);
     const bondGroup = makeBondGroup(atoms);
     const orbitalGroup = makeOrbitalGroup(orbVoxels);
 
+    MolOrb.add(irrepTag);
     MolOrb.add(atomGroup);
     MolOrb.add(bondGroup);
     MolOrb.add(orbitalGroup);
 
-    const irrep = makeLabel(labels);
-    MolOrb.add(irrep)
+    const boundingBox = new THREE.Box3();
+    boundingBox.setFromObject(MolOrb);
+    MolOrb.userData.plotSep = boundingBox.min.distanceTo(boundingBox.max);
 
     return MolOrb;
 }
 
-function makeLabel(s) {
-    // Transform "1-A2" into "1<i>a</i>&#8322;"
-    const irrep = s; //.replace(/-[A](\d+)/, (_, num) => `1<i>a</i>&#832${num};`);
-
+function makeIrrepTag(label) {
     const div = document.createElement('div');
-    div.className = 'label';
-    div.innerHTML = irrep; // Add some text to the label
-    div.style.color = '#ffff00'; // Set the label's color to yellow
-    div.style.fontSize = '16px'; // Optionally set the font size
+    const irrep = label.replace('-', '');
+    div.innerHTML = irrep;
+    div.className = 'irrep';
+    div.style.color = '#ffffff';
+    div.style.fontSize = '12px';
+    div.style.fontWeight = 'bold';
     div.style.backgroundColor = 'transparent';
 
-    const label = new CSS2DObject(div);
-    label.position.set(0, 0, 0); // Set the label's position
-    label.center.set(0, 0); // Adjust the label's center point
-
-    return label;
+    const irrepTag = new CSS2DObject(div);
+    irrepTag.name = "irrepTag";
+    irrepTag.position.set(0, 0, 0);
+    irrepTag.center.set(-1, -1.5);
+    return irrepTag;
 }
-
-
-// function make3DLabel(s) {
-//     const loader = new FontLoader();
-
-//     function loadFont(url) {
-//         return new Promise((resolve, reject) => {
-//             loader.load(url, resolve, undefined, reject);
-//         });
-//     }
-
-//     async function createTextMesh() {
-//         const material = new THREE.MeshPhongMaterial({ color: "white" });
-//         const font = await loadFont('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json');
-//         const geometry = new TextGeometry(s, {
-//             font: font,
-//             size: 3.0,
-//             height: 0.2,
-//             curveSegments: 12,
-//             bevelEnabled: true,
-//             bevelThickness: 0.15,
-//             bevelSize: 0.3,
-//             bevelSegments: 5,
-//         });
-//         return new THREE.Mesh(geometry, material);
-//     }
-
-//     // Group to hold the text mesh
-//     const group = new THREE.Group();
-
-//     // Generate the text mesh and add it to the group
-//     createTextMesh().then((textMesh) => {
-//         group.add(textMesh);
-//     });
-
-//     return group;
-// }
-
 
 function makeAtomGroup(atoms) {
     const atomGroup = new THREE.Group();
+    atomGroup.name = "atomGroup";
 
     atoms.forEach(([n, x, y, z]) => {
-        const material = new THREE.MeshPhongMaterial({ color: atomColor[n] });
-        const geometry = new THREE.SphereGeometry(Math.pow(n, 0.3) / 2, 30, 30);
+        const material = new THREE.MeshPhongMaterial({ color: ATOM_COLOR[n] });
+        const geometry = new THREE.SphereGeometry(Math.pow(n, ATOM_SCALE) / 2, 30, 30);
         const sphere = new THREE.Mesh(geometry, material);
         sphere.position.set(x, y, z);
-        atomGroup.add(sphere)
+        atomGroup.add(sphere);
     });
 
     return atomGroup;
@@ -550,7 +321,7 @@ function makeAtomGroup(atoms) {
 
 function makeBondGroup(atoms) {
     const bondGroup = new THREE.Group();
-    const thresholdDistance = 2.8;
+    bondGroup.name = "bondGroup";
 
     const posVectors = atoms.map(([n, x, y, z]) => {
         return new THREE.Vector3(x, y, z);
@@ -559,7 +330,7 @@ function makeBondGroup(atoms) {
     for (let i = 0; i < atoms.length; i++) {
         for (let j = i + 1; j < atoms.length; j++) {
             const distance = posVectors[i].distanceTo(posVectors[j]);
-            if (distance < thresholdDistance) {
+            if (distance < BOND_CUTOFF) {
                 const bond = buildBond(posVectors[i], posVectors[j]);
                 bondGroup.add(bond);
             }
@@ -572,8 +343,8 @@ function makeBondGroup(atoms) {
         const midpoint = new THREE.Vector3().addVectors(posVecI, posVecJ).multiplyScalar(0.5);
         const axis = new THREE.Vector3(0, 1, 0);
 
-        const material = new THREE.MeshPhongMaterial({ color: atomColor[0] });
-        const geometry = new THREE.CylinderGeometry(0.25, 0.25, length, 32);
+        const material = new THREE.MeshPhongMaterial({ color: ATOM_COLOR[0] });
+        const geometry = new THREE.CylinderGeometry(BOND_RADIUS, BOND_RADIUS, length, 32);
         const cylinder = new THREE.Mesh(geometry, material);
         cylinder.position.copy(midpoint);
         cylinder.quaternion.setFromUnitVectors(axis, direction.normalize());
@@ -584,33 +355,34 @@ function makeBondGroup(atoms) {
 }
 
 function makeOrbitalGroup(voxels) {
-    const OrbGroup = new THREE.Group();
-    const matR = new THREE.MeshPhongMaterial({ color: "red", transparent: true, opacity: 0.2 });
-    const matB = new THREE.MeshPhongMaterial({ color: "blue", transparent: true, opacity: 0.2 });
-    const bsize = 0.1;
+    const orbitalGroup = new THREE.Group();
+    orbitalGroup.name = "orbitalGroup";
 
-    // Define box geometry
-    const geo = new THREE.BoxGeometry(bsize, bsize, bsize);
+    const matRed = new THREE.MeshPhongMaterial({ color: "red", transparent: true, opacity: 0.2 });
+    const matBlue = new THREE.MeshPhongMaterial({ color: "blue", transparent: true, opacity: 0.2 });
+
+    const bsize = 0.2;
+    const voxelGeom = new THREE.BoxGeometry(bsize, bsize, bsize);
 
     const count = voxels.length;
-    const instancedMeshR = new THREE.InstancedMesh(geo, matR, count);
-    const instancedMeshB = new THREE.InstancedMesh(geo, matB, count);
+    const instMeshRed = new THREE.InstancedMesh(voxelGeom, matRed, count);
+    const instMeshBlue = new THREE.InstancedMesh(voxelGeom, matBlue, count);
 
-    // Set positions for each instance
     const dummy = new THREE.Object3D();
-    voxels.forEach((element, index) => {
-        dummy.position.set(element[0], element[1], element[2]);
+    voxels.forEach(([x, y, z, d], i) => {
+        dummy.position.set(x, y, z);
         dummy.updateMatrix();
-        if (element[3] < 0) {
-            instancedMeshR.setMatrixAt(index, dummy.matrix);
+        if (d < 0) {
+            instMeshRed.setMatrixAt(i, dummy.matrix);
         } else {
-            instancedMeshB.setMatrixAt(index, dummy.matrix);
+            instMeshBlue.setMatrixAt(i, dummy.matrix);
         }
     });
 
-    OrbGroup.add(instancedMeshR);
-    OrbGroup.add(instancedMeshB);
-    return OrbGroup;
+    orbitalGroup.add(instMeshRed);
+    orbitalGroup.add(instMeshBlue);
+
+    return orbitalGroup;
 }
 
 main();
