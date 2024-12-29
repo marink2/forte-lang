@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
+const CAM_ZOOM = 30;
 const MOL_ROT_SPEED = 0.01;
-const MOL_STICK_REP = false;
+const MOL_STICK_REP = true;
 const BOND_CUTOFF = 2.8;
 const BOND_RADIUS = 0.25;
-const ATOM_SCALE = 0.25;
+const ATOM_SCALE = 0.20;
 const ATOM_COLOR = [
     0xb8b4b4,   // Bond Color
     0xe0e0e0,   // H
@@ -21,9 +22,9 @@ const ATOM_COLOR = [
 
 function main() {
 
-    //###########################
+    //######################################
     //##  Renderers
-    //###########################
+    //######################################
 
     const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#c') });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -35,19 +36,20 @@ function main() {
     labelRenderer.domElement.style.position = 'fixed';
     document.body.appendChild(labelRenderer.domElement);
 
-    //###########################
-    //##  Scene and Lighting
-    //###########################
+    //######################################
+    //##  Scene, Camera, and Lighting
+    //######################################
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
 
+    const camera = new THREE.OrthographicCamera();
     const light = new THREE.AmbientLight(0xffffff, 6);
-    scene.add(light);
+    scene.add(camera, light);
 
-    //###########################
+    //######################################
     //##  Plotting
-    //###########################
+    //######################################
 
     window.plotWidth = 0;
     window.plotHeight = 0;
@@ -68,30 +70,9 @@ function main() {
         initMove = movePlot(plotObjects);
     }
 
-    //###########################
-    //##  Camera
-    //###########################
-
-    const camera = new THREE.OrthographicCamera();
-    function resize() {
-        camera.top = window.innerHeight;
-        camera.bottom = -window.innerHeight;
-        camera.left = -window.innerWidth;
-        camera.right = window.innerWidth;
-        camera.zoom = 20;
-
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        labelRenderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    window.addEventListener('resize', resize);
-    resize();
-
-    //###########################
+    //######################################
     //##  Event Listeners
-    //###########################
-
+    //######################################
 
     let raycaster = new THREE.Raycaster();
     let mouse = new THREE.Vector2();
@@ -147,7 +128,24 @@ function main() {
         });
     });
 
+    function resize() {
+        camera.top = window.innerHeight;
+        camera.bottom = -window.innerHeight;
+        camera.left = -window.innerWidth;
+        camera.right = window.innerWidth;
+        camera.zoom = CAM_ZOOM;
 
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    //######################################
+    //##  Rendering
+    //######################################
 
     let animateMove = false;
     function render() {
@@ -176,6 +174,9 @@ function main() {
 }
 
 
+//###########################################
+//##  Plot Ordering and Movement Functions
+//###########################################
 
 function moveTowardsBezier(current, target, progress) {
     // Cubic Bezier control points
@@ -248,7 +249,6 @@ function orderPlot(objects) {
         }
     });
 
-
     objects.forEach(MolOrb => {
         const size = MolOrb.userData.plotSep;
         if (MolOrb.userData.plotVis) {
@@ -259,8 +259,12 @@ function orderPlot(objects) {
             yOffsetR = yOffsetR + size;
         }
     });
-
 }
+
+
+//###########################################
+//##  Molecular Orbital Builder Functions
+//###########################################
 
 function makeMolOrb(cubeData) {
     const [atoms, orbVoxels, label] = cubeData;
@@ -310,7 +314,8 @@ function makeAtomGroup(atoms) {
 
     atoms.forEach(([n, x, y, z]) => {
         const material = new THREE.MeshPhongMaterial({ color: ATOM_COLOR[n] });
-        const geometry = new THREE.SphereGeometry(Math.pow(n, ATOM_SCALE) / 2, 30, 30);
+        const size = (MOL_STICK_REP) ? BOND_RADIUS : Math.pow(n, ATOM_SCALE) / 2;
+        const geometry = new THREE.SphereGeometry(size, 30, 30);
         const sphere = new THREE.Mesh(geometry, material);
         sphere.position.set(x, y, z);
         atomGroup.add(sphere);
@@ -323,34 +328,49 @@ function makeBondGroup(atoms) {
     const bondGroup = new THREE.Group();
     bondGroup.name = "bondGroup";
 
-    const posVectors = atoms.map(([n, x, y, z]) => {
-        return new THREE.Vector3(x, y, z);
-    });
+    const posVectors = atoms.map(([n, x, y, z]) => new THREE.Vector3(x, y, z));
+    const col = atoms.map(([n, x, y, z]) => n);
 
     for (let i = 0; i < atoms.length; i++) {
         for (let j = i + 1; j < atoms.length; j++) {
             const distance = posVectors[i].distanceTo(posVectors[j]);
             if (distance < BOND_CUTOFF) {
-                const bond = buildBond(posVectors[i], posVectors[j]);
-                bondGroup.add(bond);
+                const [bondI, bondJ] = buildBond(posVectors[i], posVectors[j], col[i], col[j]);
+                bondGroup.add(bondI, bondJ);
             }
         }
     }
 
-    function buildBond(posVecI, posVecJ) {
-        const direction = new THREE.Vector3().subVectors(posVecI, posVecJ);
-        const length = direction.length();
+    function buildBond(posVecI, posVecJ, cI, cJ) {
+        // Calculate the direction, midpoint, and axis for alignment
+        const direction = new THREE.Vector3().subVectors(posVecJ, posVecI);
+        const length = direction.length() / 2;
         const midpoint = new THREE.Vector3().addVectors(posVecI, posVecJ).multiplyScalar(0.5);
         const axis = new THREE.Vector3(0, 1, 0);
 
-        const material = new THREE.MeshPhongMaterial({ color: ATOM_COLOR[0] });
-        const geometry = new THREE.CylinderGeometry(BOND_RADIUS, BOND_RADIUS, length, 32);
-        const cylinder = new THREE.Mesh(geometry, material);
-        cylinder.position.copy(midpoint);
-        cylinder.quaternion.setFromUnitVectors(axis, direction.normalize());
+        const geometry = new THREE.CylinderGeometry(BOND_RADIUS, BOND_RADIUS, length, 32, 2);
 
-        return cylinder;
+        // Create bond I (from posVecI to midpoint)
+        const colorI = (MOL_STICK_REP) ? ATOM_COLOR[cI] : ATOM_COLOR[0];
+        const materialI = new THREE.MeshPhongMaterial({ color: colorI });
+        const cylinderI = new THREE.Mesh(geometry, materialI);
+        const midpointI = new THREE.Vector3().addVectors(posVecI, midpoint).multiplyScalar(0.5);
+        const directionI = new THREE.Vector3().subVectors(midpoint, posVecI);
+        cylinderI.position.copy(midpointI);
+        cylinderI.quaternion.setFromUnitVectors(axis, directionI.normalize());
+
+        // Create bond J (from midpoint to posVecJ)
+        const colorJ = (MOL_STICK_REP) ? ATOM_COLOR[cJ] : ATOM_COLOR[0];
+        const materialJ = new THREE.MeshPhongMaterial({ color: colorJ });
+        const cylinderJ = new THREE.Mesh(geometry, materialJ);
+        const midpointJ = new THREE.Vector3().addVectors(midpoint, posVecJ).multiplyScalar(0.5);
+        const directionJ = new THREE.Vector3().subVectors(posVecJ, midpoint);
+        cylinderJ.position.copy(midpointJ);
+        cylinderJ.quaternion.setFromUnitVectors(axis, directionJ.normalize());
+
+        return [cylinderI, cylinderJ];
     }
+
     return bondGroup;
 }
 
