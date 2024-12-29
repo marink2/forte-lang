@@ -53,6 +53,8 @@ function main() {
 
     window.plotWidth = 0;
     window.plotHeight = 0;
+    window.recenterL = 0;
+    window.recenterR = 0;
     const allCubeData = window.allCubeData;
     const plotObjects = allCubeData.map((cubeData, i) => {
         const MolOrb = makeMolOrb(cubeData);
@@ -77,11 +79,12 @@ function main() {
     let raycaster = new THREE.Raycaster();
     let mouse = new THREE.Vector2();
     let lastMouse = new THREE.Vector2();
-
     let isDragging = false;
     let eventListen = false;
 
-    window.addEventListener('mousedown', (event) => {
+    document.body.style.overflow = "hidden";
+
+    document.addEventListener('mousedown', (event) => {
         const rect = renderer.domElement.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -126,6 +129,30 @@ function main() {
             object.rotation.y += deltaX * MOL_ROT_SPEED;
             object.rotation.x += deltaY * MOL_ROT_SPEED;
         });
+    });
+
+    document.addEventListener("wheel", (event) => {
+        const scrollAmount = event.deltaY * 0.05;
+
+        if (event.clientX > window.innerWidth / 2) {
+            window.recenterR += scrollAmount;
+            plotObjects.forEach((object) => {
+                if (object.userData.plotVis == 0) {
+                    object.position.y += scrollAmount;
+                    object.userData.plotMoveTo.y += scrollAmount;
+                }
+            });
+
+        } else {
+            window.recenterL += scrollAmount;
+            plotObjects.forEach((object) => {
+                if (object.userData.plotVis == 1) {
+                    object.position.y += scrollAmount;
+                    object.userData.plotMoveTo.y += scrollAmount;
+                }
+            });
+
+        }
     });
 
     function resize() {
@@ -197,7 +224,7 @@ function moveTowardsBezier(current, target, progress) {
 
 
 function movePlot(objects) {
-    const duration = 2; // Duration of the movement in seconds
+    const duration = 1; // Duration of the movement in seconds
 
     // Ensure each object has an associated progress value
     if (!movePlot.progress) {
@@ -233,6 +260,7 @@ function orderPlot(objects) {
     let maxBounds = 0;
     let yOffsetL = 0;
     let yOffsetR = 0;
+
     let totHeightL = 0;
     let totHeightR = 0;
 
@@ -252,10 +280,10 @@ function orderPlot(objects) {
     objects.forEach(MolOrb => {
         const size = MolOrb.userData.plotSep;
         if (MolOrb.userData.plotVis) {
-            MolOrb.userData.plotMoveTo.set(-0.5 * maxBounds, (0.5 * size + yOffsetL) - (0.5 * totHeightL), -maxBounds);
+            MolOrb.userData.plotMoveTo.set(-0.5 * maxBounds, (0.5 * size + yOffsetL) - (0.5 * totHeightL) + window.recenterL, -maxBounds);
             yOffsetL = yOffsetL + size;
         } else {
-            MolOrb.userData.plotMoveTo.set(0.5 * maxBounds, (0.5 * size + yOffsetR) - (0.5 * totHeightR), -maxBounds);
+            MolOrb.userData.plotMoveTo.set(0.5 * maxBounds, (0.5 * size + yOffsetR) - (0.5 * totHeightR) + window.recenterR, -maxBounds);
             yOffsetR = yOffsetR + size;
         }
     });
