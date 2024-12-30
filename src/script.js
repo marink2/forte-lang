@@ -52,7 +52,6 @@ function main() {
     //##  Plotting
     //######################################
 
-    window.plotWidth = 0;
     window.plotHeightR = 0;
     window.plotHeightL = 0;
     window.recenterL = 0;
@@ -61,10 +60,6 @@ function main() {
     const plotObjects = allCubeData.map((cubeData, i) => {
         const MolOrb = makeMolOrb(cubeData);
         scene.add(MolOrb);
-
-        window.plotWidth = Math.max(MolOrb.userData.plotSep, window.plotWidth);
-        window.plotHeightR += MolOrb.userData.plotSep;
-
         return MolOrb;
     });
 
@@ -88,10 +83,6 @@ function main() {
     document.body.style.overflow = "hidden";
 
     document.addEventListener('mousedown', (event) => {
-        const rect = renderer.domElement.getBoundingClientRect();
-        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObjects(scene.children, true);
 
@@ -106,6 +97,14 @@ function main() {
         }
     });
 
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'b') {
+            scene.background.r ^= true;
+            scene.background.b ^= true;
+            scene.background.g ^= true;
+        }
+    });
+
     document.addEventListener("mousedown", (event) => {
         isDragging = true;
         lastMouse.x = event.clientX;
@@ -117,6 +116,10 @@ function main() {
     });
 
     document.addEventListener("mousemove", (event) => {
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
         if (!isDragging) return;
 
         // Calculate the change in mouse position
