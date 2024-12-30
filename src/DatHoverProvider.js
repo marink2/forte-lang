@@ -5,6 +5,27 @@ class DatHoverProvider {
     provideHover(document, position, token) {
         const keywords = getKeywordsFromYaml();
         const wordRange = document.getWordRangeAtPosition(position);
+
+        // Don't trigger hover if outside set forte { ... } block
+        const braceContentPattern = /(set\s+forte\s*\{[^}]*\})/gmi;
+        const documentText = document.getText();
+
+        let matchFound = false;
+        let match;
+        while ((match = braceContentPattern.exec(documentText)) !== null) {
+            const start = document.positionAt(match.index);
+            const end = document.positionAt(match.index + match[0].length);
+
+            if (position.isAfterOrEqual(start) && position.isBeforeOrEqual(end)) {
+                matchFound = true;
+                break;
+            }
+        }
+
+        if (!matchFound) {
+            return undefined;
+        }
+
         const hoveredWord = document.getText(wordRange).toLowerCase();
 
         // Find if the hovered word matches a keyword
