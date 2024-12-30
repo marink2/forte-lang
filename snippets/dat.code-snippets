@@ -1,7 +1,7 @@
 {
   "GAS-DSRG_Block": {
     "prefix": [
-      "_forte_"
+      "_3"
     ],
     "body": [
       "set forte {",
@@ -13,7 +13,7 @@
   },
   "SCF_Block": {
     "prefix": [
-      "_scf_"
+      "_2"
     ],
     "body": [
       "set {",
@@ -28,7 +28,7 @@
   },
   "Mol_Block": {
     "prefix": [
-      "_mol_"
+      "_1"
     ],
     "body": [
       "molecule ${1:name} {",
@@ -42,7 +42,7 @@
   },
   "Cube_Block": {
     "prefix": [
-      "_cube_"
+      "_4"
     ],
     "body": [
       "set {",
