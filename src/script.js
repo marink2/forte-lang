@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 const CAM_ZOOM = 30;
+const BKG_COLOR = 'black';
 const MOL_ROT_SPEED = 0.01;
 const MOL_STICK_REP = true;
 const BOND_CUTOFF = 2.8;
@@ -41,7 +42,7 @@ function main() {
     //######################################
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
+    scene.background = new THREE.Color(BKG_COLOR);
 
     const camera = new THREE.OrthographicCamera();
     const light = new THREE.AmbientLight(0xffffff, 6);

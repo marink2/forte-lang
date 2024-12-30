@@ -12,6 +12,8 @@ function formatTextInsideBraces(text) {
         // Format [ [word1], [word2, word3, ...] ] pairs
         const formattedLines = lines.map(line => {
             if (line === '') { return '' }
+            // Do not reformat commented lines
+            if (line[0] === '#') { return `  ${line}` }
             const [key, ...rest] = line.split(/\s+/);
             const value = rest.join(' ');
 
