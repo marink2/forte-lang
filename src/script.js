@@ -53,7 +53,8 @@ function main() {
     //######################################
 
     window.plotWidth = 0;
-    window.plotHeight = 0;
+    window.plotHeightR = 0;
+    window.plotHeightL = 0;
     window.recenterL = 0;
     window.recenterR = 0;
     const allCubeData = window.allCubeData;
@@ -62,7 +63,7 @@ function main() {
         scene.add(MolOrb);
 
         window.plotWidth = Math.max(MolOrb.userData.plotSep, window.plotWidth);
-        window.plotHeight += MolOrb.userData.plotSep;
+        window.plotHeightR += MolOrb.userData.plotSep;
 
         return MolOrb;
     });
@@ -82,6 +83,7 @@ function main() {
     let lastMouse = new THREE.Vector2();
     let isDragging = false;
     let eventListen = false;
+    let scrollSpeed = 0.03;
 
     document.body.style.overflow = "hidden";
 
@@ -133,26 +135,37 @@ function main() {
     });
 
     document.addEventListener("wheel", (event) => {
-        const scrollAmount = event.deltaY * 0.05;
+        const scrollAmount = event.deltaY * scrollSpeed;
 
         if (event.clientX > window.innerWidth / 2) {
-            window.recenterR += scrollAmount;
-            plotObjects.forEach((object) => {
+            // Handle right-side scrolling
+            const nextRecenterR = window.recenterR + scrollAmount;
+            const clampedRecenterR = Math.max(-window.plotHeightR / 2, Math.min(window.plotHeightR / 2, nextRecenterR));
+
+            const effectiveScrollR = clampedRecenterR - window.recenterR;
+            window.recenterR = clampedRecenterR;
+
+            plotObjects.forEach((object, i) => {
                 if (object.userData.plotVis == 0) {
-                    object.position.y += scrollAmount;
-                    object.userData.plotMoveTo.y += scrollAmount;
+                    object.position.y += effectiveScrollR;
+                    object.userData.plotMoveTo.y += effectiveScrollR;
                 }
             });
 
         } else {
-            window.recenterL += scrollAmount;
-            plotObjects.forEach((object) => {
+            // Handle left-side scrolling
+            const nextRecenterL = window.recenterL + scrollAmount;
+            const clampedRecenterL = Math.max(-window.plotHeightL / 2, Math.min(window.plotHeightL / 2, nextRecenterL));
+
+            const effectiveScrollL = clampedRecenterL - window.recenterL;
+            window.recenterL = clampedRecenterL;
+
+            plotObjects.forEach((object, i) => {
                 if (object.userData.plotVis == 1) {
-                    object.position.y += scrollAmount;
-                    object.userData.plotMoveTo.y += scrollAmount;
+                    object.position.y += effectiveScrollL;
+                    object.userData.plotMoveTo.y += effectiveScrollL;
                 }
             });
-
         }
     });
 
@@ -278,6 +291,25 @@ function orderPlot(objects) {
         }
     });
 
+    window.plotHeightL = totHeightL;
+    window.plotHeightR = totHeightR;
+
+    if (window.recenterR > window.plotHeightR / 2) {
+        window.recenterR = window.plotHeightR / 2 - 0.5
+    }
+
+    if (window.recenterR < -window.plotHeightR / 2) {
+        window.recenterR = -window.plotHeightR / 2 + 0.5
+    }
+
+    if (window.recenterL > window.plotHeightL / 2) {
+        window.recenterL = window.plotHeightL / 2 - 0.5
+    }
+
+    if (window.recenterL < -window.plotHeightL / 2) {
+        window.recenterL = -window.plotHeightL / 2 + 0.5
+    }
+
     objects.forEach(MolOrb => {
         const size = MolOrb.userData.plotSep;
         if (MolOrb.userData.plotVis) {
@@ -380,7 +412,7 @@ function makeBondGroup(atoms) {
         const geometry = new THREE.CylinderGeometry(BOND_RADIUS, BOND_RADIUS, length, 32, 2);
 
         // Create bond I (from posVecI to midpoint)
-        const colorI = (MOL_STICK_REP) ? ATOM_COLOR[cI] : ATOM_COLOR[0];
+        const colorI = ATOM_COLOR[cI];
         const materialI = new THREE.MeshPhongMaterial({ color: colorI });
         const cylinderI = new THREE.Mesh(geometry, materialI);
         const midpointI = new THREE.Vector3().addVectors(posVecI, midpoint).multiplyScalar(0.5);
@@ -389,7 +421,7 @@ function makeBondGroup(atoms) {
         cylinderI.quaternion.setFromUnitVectors(axis, directionI.normalize());
 
         // Create bond J (from midpoint to posVecJ)
-        const colorJ = (MOL_STICK_REP) ? ATOM_COLOR[cJ] : ATOM_COLOR[0];
+        const colorJ = ATOM_COLOR[cJ];
         const materialJ = new THREE.MeshPhongMaterial({ color: colorJ });
         const cylinderJ = new THREE.Mesh(geometry, materialJ);
         const midpointJ = new THREE.Vector3().addVectors(midpoint, posVecJ).multiplyScalar(0.5);

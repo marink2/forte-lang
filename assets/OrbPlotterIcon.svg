@@ -2,11 +2,12 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="31.883305mm"
-   height="31.883308mm"
-   viewBox="0 0 31.883305 31.883308"
+   width="16.000004mm"
+   height="16.000002mm"
+   viewBox="0 0 16.000004 16.000001"
    version="1.1"
    id="svg5"
+   sodipodi:docname="OrbPlotterIcon.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -37,10 +38,10 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(1.2528964e-6,-0.11669296)">
+     transform="translate(1.9061025e-6,-0.11669257)">
     <g
        id="g6736"
-       transform="matrix(0.86025389,0.86025389,-0.86025389,0.86025389,16.012637,-11.540762)">
+       transform="matrix(0.43170125,0.43170125,-0.43170125,0.43170125,8.0356211,-5.7333686)">
       <path
          style="fill:#0644a6;fill-opacity:1;stroke:#575766;stroke-width:0;stroke-dasharray:none;stroke-opacity:1"
          d="M 1.4251501,12.238372 C 4.860475,8.8030477 10.430238,12.387746 16,12.387746 c 5.569762,0 11.139524,-3.5846983 14.574849,-0.149374 1.838625,1.838626 1.838625,5.962003 0,7.800629 C 27.139524,23.474325 21.569762,19.889627 16,19.889627 c -5.569762,0 -11.139525,3.584698 -14.5748499,0.149374 -1.83862473,-1.838626 -1.83862473,-5.962003 0,-7.800629 z"
