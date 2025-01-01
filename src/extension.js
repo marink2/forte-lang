@@ -3,6 +3,7 @@ const DatCompletionProvider = require('./DatCompletionProvider');
 const DatHoverProvider = require('./DatHoverProvider');
 const DatDocumentFormatter = require('./DatDocumentFormatter');
 const plotOrbitals = require('./plotOrbitals');
+const plotMolecule = require('./plotMolecule');
 const fs = require('fs');
 const path = require('path');
 
@@ -19,9 +20,6 @@ function activate(context) {
     const formatter = new DatDocumentFormatter();
     const formatterDisposable = vscode.languages.registerDocumentFormattingEditProvider({ language: 'dat' }, formatter);
     context.subscriptions.push(formatterDisposable);
-
-
-
 
     const extensionUri = context.extensionUri;
     const iconPath = vscode.Uri.file(path.join(context.extensionPath, 'assets', 'OrbPlotterIcon.svg'));
@@ -66,6 +64,25 @@ function activate(context) {
     });
 
     context.subscriptions.push(orbitalPlotDisposable);
+
+
+    let moleculePlotDisposable = vscode.commands.registerCommand('extension.plotMolecule', function () {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showErrorMessage("No active editor found!");
+            return;
+        }
+
+        const selection = editor.selection;
+        const text = editor.document.getText(selection);
+        if (!text.trim()) {
+            vscode.window.showErrorMessage("No text selected!");
+            return;
+        }
+        plotMolecule(text, extensionUri);
+    });
+
+    context.subscriptions.push(moleculePlotDisposable);
 }
 
 function deactivate() { }

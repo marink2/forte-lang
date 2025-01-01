@@ -49,6 +49,10 @@
         "title": "Plot Orbitals"
       },
       {
+        "command": "extension.plotMolecule",
+        "title": "Plot Molecule"
+      },
+      {
         "command": "extension.HeyListen",
         "title": "It's dangerous to go alone! Take this! 🗡️"
       }
@@ -58,6 +62,11 @@
         "command": "extension.plotOrbitals",
         "key": "ctrl+o",
         "mac": "cmd+o"
+      },
+      {
+        "command": "extension.plotMolecule",
+        "key": "ctrl+m",
+        "mac": "cmd+m"
       }
     ],
     "menus": {
