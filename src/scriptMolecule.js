@@ -2,12 +2,12 @@ import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 const CAM_ZOOM = 30;
-const BKG_COLOR = 'white';
+const BKG_COLOR = 'black';
 const MOL_ROT_SPEED = 0.01;
 const MOL_STICK_REP = false;
 const BOND_CUTOFF = 2.8;
 const BOND_RADIUS = 0.25;
-const CIRC_RADIUS = 1.2;
+const ANGLE_RADIUS = 1.2;
 const ATOM_SCALE = 0.20;
 const ATOM_COLOR = [
     0xd8d4d4,   // Bond Color
@@ -35,6 +35,19 @@ const LABEL_COLOR = [
     0x0bd524    // F
 ];
 
+const ATOM_LABEL = [
+    "EMPTY",
+    "H",
+    "He",
+    "Li",
+    "Be",
+    "B",
+    "C",
+    "N",
+    "O",
+    "F"
+];
+
 function main() {
     //######################################
     //##  Renderers
@@ -58,11 +71,7 @@ function main() {
     scene.background = new THREE.Color(BKG_COLOR);
 
     const camera = new THREE.OrthographicCamera();
-    // const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
     const light = new THREE.AmbientLight(0xffffff, 6);
-    // const light = new THREE.DirectionalLight(0xffffff, 6);
-    light.position.set(-1, 2, 4);
     scene.add(camera, light);
 
     //######################################
@@ -82,7 +91,8 @@ function main() {
     let lastMouse = new THREE.Vector2();
     let isDragging = false;
     let isSpacebarPressed = false;
-    let scrollSpeed = 0.02;
+    let isDelete = false;
+    let scrollSpeed = 0.005;
 
     document.body.style.overflow = "hidden";
 
@@ -103,7 +113,7 @@ function main() {
             let touchedMeasurement = false;
             intersects.forEach((intersection) => {
                 const intersectedObject = intersection.object;
-                if (intersectedObject.name && (intersectedObject.name === "BLength" || intersectedObject.name === "BAngle")) {
+                if (intersectedObject.name && (intersectedObject.name === "BLength" || intersectedObject.name === "BAngle" || intersectedObject.name === "ALoc")) {
                     Mol.children.forEach((child) => {
                         if (child.uuid === intersectedObject.uuid) {
                             if (child.children.length === 1 && child.children[0].isCSS2DObject) {
@@ -178,14 +188,47 @@ function main() {
             console.log("No Atoms Selected")
             return
         }
+
         if (Object.keys(dict).length == 1) {
-            console.log("Only One Atom Selected")
-            return
+            const aX = Math.round(dict[0].pos.x * 1000) / 1000
+            const aY = Math.round(dict[0].pos.y * 1000) / 1000
+            const aZ = Math.round(dict[0].pos.z * 1000) / 1000
+
+            const geometry = new THREE.SphereGeometry(0.3, 32, 32);
+            const material = new THREE.MeshBasicMaterial({
+                color: new THREE.Color(0, 1, 0),
+                depthTest: false,
+                depthWrite: false,
+                transparent: true,
+                opacity: 0.25,
+            });
+            const circSmall = new THREE.Mesh(geometry, material);
+            circSmall.name = "ALoc"
+            circSmall.position.copy(dict[0].pos)
+
+            const div = document.createElement('div');
+            const text = `${aX}<br>${aY}<br>${aZ}`;
+            div.innerHTML = text;
+            div.className = 'ALoc';
+            div.style.color = '#16b523';
+            div.style.fontSize = '12px';
+            div.style.fontWeight = 'bold';
+            div.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            div.style.padding = '2px';
+            div.style.marginLeft = '16px';
+            div.style.textAlign = 'right';
+
+            const label = new CSS2DObject(div);
+            label.name = "label";
+            label.position.set(0, 0, 0);
+            label.center.set(1, 1);
+
+            circSmall.add(label)
+            Mol.add(circSmall)
         }
 
-        if (Object.keys(dict).length == 2) {
-            console.log("Graphing Bond")
 
+        if (Object.keys(dict).length == 2) {
             const A = dict[0].pos;
             const B = dict[1].pos;
 
@@ -211,12 +254,8 @@ function main() {
             const B = dict[1].pos;
             const C = dict[2].pos;
 
-            const refVec = new THREE.Vector3(1, 0, 0);
             const BC = new THREE.Vector3().subVectors(C, B);
             const BA = new THREE.Vector3().subVectors(A, B);
-
-            let ang1 = BC.angleTo(refVec);
-
 
             // Calculate the dot product of BA and BC
             const dotProduct = BA.dot(BC);
@@ -231,34 +270,6 @@ function main() {
             // Compute the angle in radians
             let angle = Math.acos(cosineAngle);
 
-            console.log(ang1)
-            console.log(angle)
-
-            if (BC.y < 0) {
-                ang1 = -ang1
-            }
-
-            if (((A.x - B.x) < 0) && (BC.y < 0)) {
-                angle = - angle
-            }
-
-            if (((A.y - B.y) < 0) && !(BC.y < 0) && (C.x - B.x >= 0)) {
-                angle = -angle
-            }
-
-            if (((A.y - B.y) >= 0) && !(BC.y < 0) && (C.x - B.x < 0)) {
-                angle = -angle
-            }
-
-            // if (((A.x - B.x) >= 0) && (BC.y < 0) && (C.x - A.x > 0)) {
-            //     angle = -angle
-            // }
-
-            console.log(ang1)
-            console.log(angle)
-
-            const thetaStart = ang1;
-            const thetaLength = angle;
             const material = new THREE.MeshBasicMaterial({
                 color: new THREE.Color(0xffae17),
                 depthTest: false,
@@ -267,59 +278,122 @@ function main() {
                 opacity: 0.5,
                 side: THREE.DoubleSide,
             });
-            // const geometry = new THREE.CircleGeometry(CIRC_RADIUS, 30, thetaStart, thetaLength);
-            // const circ = new THREE.Mesh(geometry, material);
-            // circ.position.copy(B)
 
-            // Define your vectors
-            const v1 = new THREE.Vector3().subVectors(C, B).normalize();
-            const v2 = new THREE.Vector3().subVectors(A, B).normalize();
+            const Radius_arc = 1;
+
+            const v1 = new THREE.Vector3().subVectors(C, B).normalize().multiplyScalar(Radius_arc);
+            const v2 = new THREE.Vector3().subVectors(A, B).normalize().multiplyScalar(Radius_arc);
 
             // Create the geometry for the triangle
             const geometry = new THREE.BufferGeometry();
 
             // Define the vertices of the triangle relative to point B
-            const vertices = new Float32Array([
-                0, 0, 0, // Vertex 1: B (center)
-                v1.x, v1.y, v1.z, // Vertex 2: B + v1
-                v2.x, v2.y, v2.z  // Vertex 3: B + v2
-            ]);
+            let vertices = [
+                B.x, B.y, B.z,
+                v2.x + B.x, v2.y + B.y, v2.z + B.z
+            ];
 
-            // Set the vertices into the geometry
-            geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            const vecM = new THREE.Vector3(0, 0, 0);
 
-            // Create the mesh
-            const circ = new THREE.Mesh(geometry, material);
+            // Calculate equally spaced points along edge A-C
+            const numPoints = 129;
+            for (let i = 0; i <= numPoints; i++) {
+                // Interpolate along the edge A-C
+                const t = i / numPoints;
+                const edgePoint = new THREE.Vector3().lerpVectors(A, C, t);
 
-            circ.position.copy(B)
+                // Find the vector from B to this point
+                const toPoint = new THREE.Vector3().subVectors(edgePoint, B);
+
+                // Normalize and scale to Radius_arc
+                toPoint.normalize().multiplyScalar(Radius_arc);
+
+                // Add the point back to B to place it correctly
+                const finalPoint = new THREE.Vector3().addVectors(B, toPoint);
+                if (i == 64) {
+                    vecM.copy(finalPoint)
+                }
+
+                // Add this vertex to the list
+                vertices.push(finalPoint.x, finalPoint.y, finalPoint.z);
+            }
+            vertices.push(v1.x + B.x, v1.y + B.y, v1.z + B.z)
+
+
+            const float32Vertices = new Float32Array(vertices);
+            geometry.setAttribute('position', new THREE.BufferAttribute(float32Vertices, 3));
+
+            // Create indices for a triangle fan starting from the center (index 0)
+            const indices = [];
+            const totalVertices = vertices.length / 3;
+            for (let i = 1; i < totalVertices - 1; i++) {
+                indices.push(0, i, i + 1);
+            }
+
+            geometry.setIndex(indices);
+            geometry.computeVertexNormals();
+
+            const BCnew = new THREE.Vector3().subVectors(C, B).normalize();
+
+            // Define the semicircle geometry
+            const geometry2 = new THREE.CircleGeometry(1, 32, 0, Math.PI);
+            let circ = null;
+
+            const tolerance = 0.05;
+
+            // Calculate the angle between BA and BC
+            // const BA = new THREE.Vector3().subVectors(A, B).normalize();
+            // const angle = Math.acos(BA.dot(BC)); // Angle between BA and BC
+            console.log(angle - Math.PI)
+            if (Math.abs(angle - Math.PI) < tolerance) {
+
+                // Use geometry2 and align it with BC
+
+                // Create a quaternion to rotate geometry2 from XY plane to align with BC
+                const quaternion = new THREE.Quaternion();
+                const defaultDirection = new THREE.Vector3(1, 0, 0); // X-axis (default direction of the circle)
+                quaternion.setFromUnitVectors(defaultDirection, BCnew);
+
+                console.log(quaternion)
+
+                const mesh = new THREE.Mesh(geometry2, material);
+
+                // Apply rotation
+                mesh.quaternion.copy(quaternion);
+
+                // Translate to align it properly (optional: move to B or midpoint of BC)
+                const midpoint = new THREE.Vector3().addVectors(B, C).multiplyScalar(0.5);
+                mesh.position.copy(B);
+
+                circ = mesh;
+            } else {
+                circ = new THREE.Mesh(geometry, material);
+            }
 
 
             circ.name = "BAngle"
 
             const div = document.createElement('div');
             const angDeg = Math.abs(angle) * 180 / Math.PI;
-            const text = `${Math.round(angDeg * 100) / 100}°`;
+            const text = `${Math.round(angDeg * 100) / 100}`;
             div.innerHTML = text;
             div.className = 'BAngle';
-            div.style.color = '#d48a00';
+            div.style.color = '#ff5c00';
             div.style.fontSize = '12px';
             div.style.fontWeight = 'bold';
             div.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
             div.style.padding = '2px';
 
-
-            const Atag = dict[0].pos;
-            const Btag = dict[1].pos;
-            const Ctag = dict[2].pos;
-
-            const mid = new THREE.Vector3().addVectors(Atag, Ctag).multiplyScalar(0.5)
-            const vecM = new THREE.Vector3().subVectors(mid, Btag);
-            vecM.normalize()
-
             const label = new CSS2DObject(div);
             label.name = "label";
-            label.position.set(vecM.x, vecM.y, vecM.z);
-            label.center.set(0.5, 0.5);
+            if (Math.abs(angle - Math.PI) < tolerance) {
+                label.position.set(0, 0, 0);
+                label.center.set(1, 1);
+            } else {
+                label.position.set(vecM.x, vecM.y, vecM.z);
+                label.center.set(0.5, 0.5);
+            }
+
 
             circ.add(label)
 
@@ -328,11 +402,10 @@ function main() {
         return
     }
 
-
-
     document.addEventListener('keydown', (event) => {
         if (!isSpacebarPressed && event.key === ' ') {
             makeLabel(Selected);
+            isSpacebarPressed = true
         }
     });
 
@@ -347,6 +420,24 @@ function main() {
             scene.background.r ^= true;
             scene.background.b ^= true;
             scene.background.g ^= true;
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (!isDelete && event.key === 'c') {
+            Mol.children.slice().forEach((child, i) => {
+                if (child.name === "BLength" || child.name === "BAngle" || child.name === "ALoc") {
+                    child.remove(child.children[0]);
+                    Mol.remove(child);
+                }
+            });
+            isDelete = true
+        }
+    });
+
+    document.addEventListener('keyup', (event) => {
+        if (isDelete && event.key === 'c') {
+            isDelete = false
         }
     });
 
@@ -384,8 +475,8 @@ function main() {
         deltaRotationX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * MOL_ROT_SPEED);
 
         // Combine the new rotations with the molecule's current quaternion
-        Mol.quaternion.multiplyQuaternions(deltaRotationY, Mol.quaternion); // Apply Y-axis rotation
-        Mol.quaternion.multiplyQuaternions(deltaRotationX, Mol.quaternion); // Apply X-axis rotation
+        Mol.quaternion.multiplyQuaternions(deltaRotationY, Mol.quaternion);
+        Mol.quaternion.multiplyQuaternions(deltaRotationX, Mol.quaternion);
     });
 
     document.addEventListener("wheel", (event) => {
@@ -395,14 +486,81 @@ function main() {
         Mol.scale.z -= scrollAmount;
     });
 
+    document.addEventListener('contextmenu', (event) => {
+        event.preventDefault(); // Prevent the default context menu
+        const rect = renderer.domElement.getBoundingClientRect();
+
+        // Create a custom menu
+        const menu = document.createElement('div');
+        menu.style.position = 'absolute';
+        menu.style.top = `${rect.top + 10}px`;
+        menu.style.left = `${rect.left + 10}px`;
+        menu.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        menu.style.border = '1px solid #cccccc';
+        menu.style.borderRadius = '8px';
+        menu.style.boxShadow = '0px 4px 8px rgba(0, 0, 0, 0.2)';
+        menu.style.padding = '8px';
+        menu.style.zIndex = '1000';
+        menu.style.cursor = 'default';
+        menu.style.fontFamily = 'Helvetica Neue';
+        menu.style.fontSize = '12px';
+
+        // Add menu items
+        const items = [
+            { label: 'Select Atom', action: 'Doub-click' },
+            { label: 'Deselect Atom', action: 'Doub-click' },
+            { label: 'Remove Measurement', action: 'Doub-click' },
+            { label: 'Make Measurement', action: 'Spacebar' },
+            { label: 'Clear All Meas.', action: 'C' },
+            { label: 'Bkg. Color', action: 'B' },
+            { label: 'Zoom in/out', action: 'Scroll' }
+        ];
+
+        items.forEach((item) => {
+            const itemRow = document.createElement('div');
+            itemRow.style.display = 'flex';
+            itemRow.style.justifyContent = 'space-between';
+            itemRow.style.padding = '4px 8px';
+
+            const label = document.createElement('span');
+            label.textContent = item.label;
+            label.style.color = 'rgba(255, 255, 255, 1)';
+            label.style.flex = '1';
+
+            const action = document.createElement('span');
+            action.textContent = item.action;
+            action.style.color = 'rgba(0, 255, 255, 1)';
+            action.style.marginLeft = '16px';
+            action.style.textAlign = 'right';
+
+            itemRow.appendChild(label);
+            itemRow.appendChild(action);
+            menu.appendChild(itemRow);
+        });
+
+        // Remove existing menu (if any)
+        document.body.querySelectorAll('.custom-context-menu').forEach((el) => el.remove());
+
+        // Add the menu to the body
+        menu.className = 'custom-context-menu';
+        document.body.appendChild(menu);
+
+        // Remove the menu on click elsewhere
+        document.addEventListener(
+            'click',
+            () => {
+                menu.remove();
+            },
+            { once: true }
+        );
+    });
+
     function resize() {
         camera.top = window.innerHeight;
         camera.bottom = -window.innerHeight;
         camera.left = -window.innerWidth;
         camera.right = window.innerWidth;
         camera.zoom = CAM_ZOOM;
-
-        // camera.aspect = window.innerWidth / window.innerHeight
 
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -447,6 +605,8 @@ function makeAtomGroup(atoms) {
     const atomGroup = new THREE.Group();
     atomGroup.name = "atomGroup";
 
+    const atomCount = {};
+
     atoms.forEach(([n, x, y, z], i) => {
         const material = new THREE.MeshPhongMaterial({ color: ATOM_COLOR[n] });
         const size = (MOL_STICK_REP) ? BOND_RADIUS : Math.pow(n, ATOM_SCALE) / 2;
@@ -454,6 +614,8 @@ function makeAtomGroup(atoms) {
         const sphere = new THREE.Mesh(geometry, material);
         sphere.name = "atom";
         sphere.userData.atomListNumber = i;
+
+        if (!atomCount[n]) { atomCount[n] = 1; } else { atomCount[n] += 1; }
 
         const outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
         const outlineGeometry = new THREE.SphereGeometry(size + 0.12, 30, 30); // Slightly larger for outline
@@ -465,10 +627,10 @@ function makeAtomGroup(atoms) {
 
 
         const div = document.createElement('div');
-        div.innerHTML = `${i}`;
+        div.innerHTML = `${ATOM_LABEL[n]}${atomCount[n]}`;
         div.className = "atomLabel";
         div.style.color = '#' + LABEL_COLOR[n].toString(16).padStart(6, '0');;
-        div.style.fontSize = '14px';
+        div.style.fontSize = '12px';
         div.style.fontWeight = 'bold';
         div.style.backgroundColor = 'transparent';
 

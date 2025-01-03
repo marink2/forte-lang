@@ -1,17 +1,21 @@
 const vscode = require('vscode');
 const fs = require('fs');
 
-function plotMolecule(text, extensionUri) {
+function plotMolecule(text, extensionUri, iconPathMol) {
     // Parse molecule data
     const molecule = parseMolecule(text);
 
     // Show the Three.js visualization in a webview
     const panel = vscode.window.createWebviewPanel(
         'moleculeViewer',
-        'Molecule Viewer',
-        vscode.ViewColumn.One,
-        { enableScripts: true }
+        'Mol View',
+        vscode.ViewColumn.Beside,
+        {
+            enableScripts: true,
+            retainContextWhenHidden: true
+        }
     );
+    panel.iconPath = iconPathMol;
     // Prepare the webview content
     const scriptUri = panel.webview.asWebviewUri(
         vscode.Uri.joinPath(extensionUri, 'src', 'scriptMolecule.js')
@@ -23,6 +27,25 @@ const atom = {
     'H': 1,
     'h': 1,
     '1': 1,
+
+    'He': 2,
+    'he': 2,
+    '2': 2,
+    'HE': 2,
+
+    'Li': 3,
+    'li': 3,
+    '3': 3,
+    'LI': 3,
+
+    'Be': 4,
+    'be': 4,
+    '4': 4,
+    'BE': 4,
+
+    'B': 5,
+    'b': 5,
+    '5': 5,
 
     'C': 6,
     'c': 6,
@@ -37,13 +60,14 @@ const atom = {
     '8': 8,
 
     'F': 9,
-    'f': 9
+    'f': 9,
+    '9': 9
 };
 
 function parseMolecule(data) {
     const lines = data.trim().split('\n');
     return lines.map(line => {
-        const [Z, x, y, z] = line.split(/\s+/);
+        const [Z, x, y, z] = line.trim().split(/\s+/);
         return [atom[Z], parseFloat(x), parseFloat(y), parseFloat(z)];
     });
 }

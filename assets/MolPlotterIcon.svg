@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="16mm"
+   height="16mm"
+   viewBox="0 0 16 16"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.1 (9c6d41e, 2022-07-14)"
+   sodipodi:docname="MolPlotterIcon.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="4.1493367"
+     inkscape:cx="-4.6995463"
+     inkscape:cy="-4.5790451"
+     inkscape:window-width="1440"
+     inkscape:window-height="872"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g5766" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="Layer 4"
+     transform="translate(-0.00448921,-0.01294563)">
+    <g
+       id="g11542"
+       transform="matrix(1.328119,0,0,1.328119,-3.3639945,-9.9768384)">
+      <g
+         id="g5766"
+         transform="matrix(1.0447825,0,0,1.0447825,-0.65308059,-0.87634235)">
+        <g
+           id="g7285"
+           transform="matrix(0.97614075,-7.7144643e-4,7.7144643e-4,-0.97614075,0.08437938,27.100712)">
+          <circle
+             style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.965699;stroke-dasharray:none;stroke-opacity:1"
+             id="path4968"
+             cx="6.1021161"
+             cy="16.122805"
+             r="2.5911787" />
+          <circle
+             style="fill:#ff4d4d;fill-opacity:1;stroke:#000000;stroke-width:0.965699;stroke-dasharray:none;stroke-opacity:1"
+             id="path4968-1"
+             cx="8.8180256"
+             cy="12.784607"
+             r="4.2659202" />
+          <circle
+             style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.965699;stroke-dasharray:none;stroke-opacity:1"
+             id="path4968-18"
+             cx="11.76674"
+             cy="15.990702"
+             r="2.5911787" />
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

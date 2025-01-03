@@ -65,7 +65,7 @@ function activate(context) {
 
     context.subscriptions.push(orbitalPlotDisposable);
 
-
+    const iconPathMol = vscode.Uri.file(path.join(context.extensionPath, 'assets', 'MolPlotterIcon.svg'));
     let moleculePlotDisposable = vscode.commands.registerCommand('extension.plotMolecule', function () {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
@@ -76,10 +76,10 @@ function activate(context) {
         const selection = editor.selection;
         const text = editor.document.getText(selection);
         if (!text.trim()) {
-            vscode.window.showErrorMessage("No text selected!");
+            vscode.window.showInformationMessage("No molecule selected!");
             return;
         }
-        plotMolecule(text, extensionUri);
+        plotMolecule(text, extensionUri, iconPathMol);
     });
 
     context.subscriptions.push(moleculePlotDisposable);
