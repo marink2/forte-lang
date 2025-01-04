@@ -5,9 +5,9 @@ const CAM_ZOOM = 30;
 const BKG_COLOR = 'black';
 const MOL_ROT_SPEED = 0.01;
 const MOL_STICK_REP = false;
+const ANGLE_RADIUS = 1.0;
 const BOND_CUTOFF = 2.8;
 const BOND_RADIUS = 0.25;
-const ANGLE_RADIUS = 1.2;
 const ATOM_SCALE = 0.20;
 const ATOM_COLOR = [
     0xd8d4d4,   // Bond Color
@@ -86,86 +86,68 @@ function main() {
     //##  Event Listeners
     //######################################
 
+    let Selected = {};
+    let posVals = 0;
     let raycaster = new THREE.Raycaster();
     let mouse = new THREE.Vector2();
     let lastMouse = new THREE.Vector2();
+    let scrollSpeed = 0.005;
     let isDragging = false;
     let isSpacebarPressed = false;
     let isDelete = false;
-    let scrollSpeed = 0.005;
 
     document.body.style.overflow = "hidden";
-
-    let Selected = {};
-    let posVals = 0;
 
     document.addEventListener('dblclick', (event) => {
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObjects(scene.children, true);
 
         if (intersects.length > 0) {
+
+            // Remove measurement label if it is intersected
+            const removedMeas = deselectMeas(intersects, Mol);
+            if (removedMeas) { return }
+
+            // Check if intersected is an atom group object
             let head = intersects[0].object;
             while (head.name && head.name !== 'atomG') {
                 head = head.parent;
             }
 
-            // Intermisionary code to delete potential measurements
-            let touchedMeasurement = false;
-            intersects.forEach((intersection) => {
-                const intersectedObject = intersection.object;
-                if (intersectedObject.name && (intersectedObject.name === "BLength" || intersectedObject.name === "BAngle" || intersectedObject.name === "ALoc")) {
-                    Mol.children.forEach((child) => {
-                        if (child.uuid === intersectedObject.uuid) {
-                            if (child.children.length === 1 && child.children[0].isCSS2DObject) {
-                                child.remove(child.children[0]);
-                            }
-                            Mol.remove(child);
-                        }
-                    });
-                    touchedMeasurement = true
-                }
-            });
-            if (touchedMeasurement) { return }
-            // ##########################################################
-
             if (!head.name) { return }
 
-            const id = head.children[0].userData.atomListNumber;
+            // Highlight intersected atom group outline if not already highlighted
+            head.children[1].userData.highlighted ^= true;
 
-            head.children[1].material.color.g ^= true;
-            head.children[1].material.color.b ^= true;
+            if (head.children[1].userData.highlighted) {
 
-            if (head.children[1].material.color.g) {
-
+                head.children[1].material.color.set(0x00ffff);
                 if (posVals >= 3) {
-
                     posVals = 0;
                     Selected = {};
-
                     scene.traverse((child) => {
                         if (child.name === "OutlineAtom") {
                             if (child.uuid === head.children[1].uuid) {
                                 return
                             }
                             child.material.color.set(0x000000);
+                            child.userData.highlighted = false;
                         }
                     });
-                    Selected[posVals] = { 'uuid': id, 'pos': head.children[0].position };
-                    posVals += 1;
-                    return;
                 }
-
-                Selected[posVals] = { 'uuid': id, 'pos': head.children[0].position };
+                Selected[posVals] = { 'uuid': head.children[0].uuid, 'pos': head.children[0].position };
                 posVals += 1;
 
             } else {
                 posVals -= 1;
                 let found = false;
+                head.children[1].material.color.set(0x000000);
+                head.children[1].userData.highlighted = false;
                 Object.keys(Selected).forEach(key => {
                     if (found) {
                         Selected[key - 1] = Selected[key];
                         delete Selected[key];
-                    } else if (Selected[key].uuid === id) {
+                    } else if (Selected[key].uuid === head.children[0].uuid) {
                         delete Selected[key];
                         found = true;
                     }
@@ -176,6 +158,7 @@ function main() {
             scene.traverse((child) => {
                 if (child.name === "OutlineAtom") {
                     child.material.color.set(0x000000);
+                    child.userData.highlighted = false;
                 }
             });
             posVals = 0;
@@ -183,247 +166,11 @@ function main() {
         }
     });
 
-    function makeLabel(dict) {
-        if (Object.keys(dict).length == 0) {
-            console.log("No Atoms Selected")
-            return
-        }
-
-        if (Object.keys(dict).length == 1) {
-            const aX = Math.round(dict[0].pos.x * 1000) / 1000
-            const aY = Math.round(dict[0].pos.y * 1000) / 1000
-            const aZ = Math.round(dict[0].pos.z * 1000) / 1000
-
-            const geometry = new THREE.SphereGeometry(0.3, 32, 32);
-            const material = new THREE.MeshBasicMaterial({
-                color: new THREE.Color(0, 1, 0),
-                depthTest: false,
-                depthWrite: false,
-                transparent: true,
-                opacity: 0.25,
-            });
-            const circSmall = new THREE.Mesh(geometry, material);
-            circSmall.name = "ALoc"
-            circSmall.position.copy(dict[0].pos)
-
-            const div = document.createElement('div');
-            const text = `${aX}<br>${aY}<br>${aZ}`;
-            div.innerHTML = text;
-            div.className = 'ALoc';
-            div.style.color = '#16b523';
-            div.style.fontSize = '12px';
-            div.style.fontWeight = 'bold';
-            div.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-            div.style.padding = '2px';
-            div.style.marginLeft = '16px';
-            div.style.textAlign = 'right';
-
-            const label = new CSS2DObject(div);
-            label.name = "label";
-            label.position.set(0, 0, 0);
-            label.center.set(1, 1);
-
-            circSmall.add(label)
-            Mol.add(circSmall)
-        }
-
-
-        if (Object.keys(dict).length == 2) {
-            const A = dict[0].pos;
-            const B = dict[1].pos;
-
-            const cyl = makeBlen(A, B)
-
-            Mol.add(cyl)
-        }
-        if (Object.keys(dict).length == 3) {
-            //make some quick bond lengths 
-
-            const Abl = dict[0].pos;
-            const Bbl = dict[1].pos;
-            const Cbl = dict[2].pos;
-
-            const cyl1 = makeBlen(Bbl, Abl)
-            const cyl2 = makeBlen(Bbl, Cbl)
-
-            Mol.add(cyl1)
-            Mol.add(cyl2)
-
-            // #####################
-            const A = dict[0].pos;
-            const B = dict[1].pos;
-            const C = dict[2].pos;
-
-            const BC = new THREE.Vector3().subVectors(C, B);
-            const BA = new THREE.Vector3().subVectors(A, B);
-
-            // Calculate the dot product of BA and BC
-            const dotProduct = BA.dot(BC);
-
-            // Calculate the magnitudes (norms) of the vectors
-            const magnitudeBA = BA.length();
-            const magnitudeBC = BC.length();
-
-            // Compute the cosine of the angle
-            const cosineAngle = dotProduct / (magnitudeBA * magnitudeBC);
-
-            // Compute the angle in radians
-            let angle = Math.acos(cosineAngle);
-
-            const material = new THREE.MeshBasicMaterial({
-                color: new THREE.Color(0xffae17),
-                depthTest: false,
-                depthWrite: false,
-                transparent: true,
-                opacity: 0.5,
-                side: THREE.DoubleSide,
-            });
-
-            const Radius_arc = 1;
-
-            const v1 = new THREE.Vector3().subVectors(C, B).normalize().multiplyScalar(Radius_arc);
-            const v2 = new THREE.Vector3().subVectors(A, B).normalize().multiplyScalar(Radius_arc);
-
-            // Create the geometry for the triangle
-            const geometry = new THREE.BufferGeometry();
-
-            // Define the vertices of the triangle relative to point B
-            let vertices = [
-                B.x, B.y, B.z,
-                v2.x + B.x, v2.y + B.y, v2.z + B.z
-            ];
-
-            const vecM = new THREE.Vector3(0, 0, 0);
-
-            // Calculate equally spaced points along edge A-C
-            const numPoints = 129;
-            for (let i = 0; i <= numPoints; i++) {
-                // Interpolate along the edge A-C
-                const t = i / numPoints;
-                const edgePoint = new THREE.Vector3().lerpVectors(A, C, t);
-
-                // Find the vector from B to this point
-                const toPoint = new THREE.Vector3().subVectors(edgePoint, B);
-
-                // Normalize and scale to Radius_arc
-                toPoint.normalize().multiplyScalar(Radius_arc);
-
-                // Add the point back to B to place it correctly
-                const finalPoint = new THREE.Vector3().addVectors(B, toPoint);
-                if (i == 64) {
-                    vecM.copy(finalPoint)
-                }
-
-                // Add this vertex to the list
-                vertices.push(finalPoint.x, finalPoint.y, finalPoint.z);
-            }
-            vertices.push(v1.x + B.x, v1.y + B.y, v1.z + B.z)
-
-
-            const float32Vertices = new Float32Array(vertices);
-            geometry.setAttribute('position', new THREE.BufferAttribute(float32Vertices, 3));
-
-            // Create indices for a triangle fan starting from the center (index 0)
-            const indices = [];
-            const totalVertices = vertices.length / 3;
-            for (let i = 1; i < totalVertices - 1; i++) {
-                indices.push(0, i, i + 1);
-            }
-
-            geometry.setIndex(indices);
-            geometry.computeVertexNormals();
-
-            const BCnew = new THREE.Vector3().subVectors(C, B).normalize();
-
-            // Define the semicircle geometry
-            const geometry2 = new THREE.CircleGeometry(1, 32, 0, Math.PI);
-            let circ = null;
-
-            const tolerance = 0.05;
-
-            // Calculate the angle between BA and BC
-            // const BA = new THREE.Vector3().subVectors(A, B).normalize();
-            // const angle = Math.acos(BA.dot(BC)); // Angle between BA and BC
-            console.log(angle - Math.PI)
-            if (Math.abs(angle - Math.PI) < tolerance) {
-
-                // Use geometry2 and align it with BC
-
-                // Create a quaternion to rotate geometry2 from XY plane to align with BC
-                const quaternion = new THREE.Quaternion();
-                const defaultDirection = new THREE.Vector3(1, 0, 0); // X-axis (default direction of the circle)
-                quaternion.setFromUnitVectors(defaultDirection, BCnew);
-
-                console.log(quaternion)
-
-                const mesh = new THREE.Mesh(geometry2, material);
-
-                // Apply rotation
-                mesh.quaternion.copy(quaternion);
-
-                // Translate to align it properly (optional: move to B or midpoint of BC)
-                const midpoint = new THREE.Vector3().addVectors(B, C).multiplyScalar(0.5);
-                mesh.position.copy(B);
-
-                circ = mesh;
-            } else {
-                circ = new THREE.Mesh(geometry, material);
-            }
-
-
-            circ.name = "BAngle"
-
-            const div = document.createElement('div');
-            const angDeg = Math.abs(angle) * 180 / Math.PI;
-            const text = `${Math.round(angDeg * 100) / 100}`;
-            div.innerHTML = text;
-            div.className = 'BAngle';
-            div.style.color = '#ff5c00';
-            div.style.fontSize = '12px';
-            div.style.fontWeight = 'bold';
-            div.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-            div.style.padding = '2px';
-
-            const label = new CSS2DObject(div);
-            label.name = "label";
-            if (Math.abs(angle - Math.PI) < tolerance) {
-                label.position.set(0, 0, 0);
-                label.center.set(1, 1);
-            } else {
-                label.position.set(vecM.x, vecM.y, vecM.z);
-                label.center.set(0.5, 0.5);
-            }
-
-
-            circ.add(label)
-
-            Mol.add(circ)
-        }
-        return
-    }
-
     document.addEventListener('keydown', (event) => {
         if (!isSpacebarPressed && event.key === ' ') {
-            makeLabel(Selected);
+            addMeasurement(Selected, Mol);
             isSpacebarPressed = true
         }
-    });
-
-    document.addEventListener('keyup', (event) => {
-        if (isSpacebarPressed && event.key === ' ') {
-            isSpacebarPressed = false
-        }
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'b') {
-            scene.background.r ^= true;
-            scene.background.b ^= true;
-            scene.background.g ^= true;
-        }
-    });
-
-    document.addEventListener('keydown', (event) => {
         if (!isDelete && event.key === 'c') {
             Mol.children.slice().forEach((child, i) => {
                 if (child.name === "BLength" || child.name === "BAngle" || child.name === "ALoc") {
@@ -433,9 +180,17 @@ function main() {
             });
             isDelete = true
         }
+        if (event.key === 'b') {
+            scene.background.r ^= true;
+            scene.background.b ^= true;
+            scene.background.g ^= true;
+        }
     });
 
     document.addEventListener('keyup', (event) => {
+        if (isSpacebarPressed && event.key === ' ') {
+            isSpacebarPressed = false
+        }
         if (isDelete && event.key === 'c') {
             isDelete = false
         }
@@ -453,9 +208,12 @@ function main() {
 
     document.addEventListener("mousemove", (event) => {
         const rect = renderer.domElement.getBoundingClientRect();
+
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
         if (!isDragging) return;
+
         // Calculate the change in mouse position
         const deltaX = event.clientX - lastMouse.x;
         const deltaY = event.clientY - lastMouse.y;
@@ -486,11 +244,11 @@ function main() {
         Mol.scale.z -= scrollAmount;
     });
 
+    // Custom menu on right-click
     document.addEventListener('contextmenu', (event) => {
-        event.preventDefault(); // Prevent the default context menu
+        event.preventDefault();
         const rect = renderer.domElement.getBoundingClientRect();
 
-        // Create a custom menu
         const menu = document.createElement('div');
         menu.style.position = 'absolute';
         menu.style.top = `${rect.top + 10}px`;
@@ -505,7 +263,7 @@ function main() {
         menu.style.fontFamily = 'Helvetica Neue';
         menu.style.fontSize = '12px';
 
-        // Add menu items
+        // Menu items
         const items = [
             { label: 'Select Atom', action: 'Doub-click' },
             { label: 'Deselect Atom', action: 'Doub-click' },
@@ -583,6 +341,263 @@ function main() {
     requestAnimationFrame(render);
 }
 
+
+//###########################################
+//##  Object selection functions
+//###########################################
+
+function deselectMeas(intersects, Mol) {
+    let removedMeas = false;
+    intersects.forEach((intersection) => {
+        const obj = intersection.object;
+        if (obj.name && (obj.name === "BLength" || obj.name === "BAngle" || obj.name === "ALoc")) {
+            Mol.children.forEach((child) => {
+                if (child.uuid === obj.uuid) {
+                    if (child.children.length === 1 && child.children[0].isCSS2DObject) {
+                        child.remove(child.children[0]);
+                    }
+                    Mol.remove(child);
+                }
+            });
+            removedMeas = true
+        }
+    });
+    return removedMeas
+}
+
+
+//###########################################
+//##  Measurement label functions
+//###########################################
+
+function addMeasurement(dict, Mol) {
+    if (Object.keys(dict).length == 0) {
+        console.log("no selection to measure")
+    }
+
+    if (Object.keys(dict).length == 1) {
+        console.log("measure atom location")
+        const loc = dict[0].pos.clone();
+        loc.set(
+            Math.round(loc.x * 1000) / 1000,
+            Math.round(loc.y * 1000) / 1000,
+            Math.round(loc.z * 1000) / 1000
+        );
+
+        const geometry = new THREE.SphereGeometry(0.3, 32, 32);
+        const material = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(0, 1, 0),
+            depthTest: false,
+            depthWrite: false,
+            transparent: true,
+            opacity: 0.5,
+        });
+
+        const sphere = new THREE.Mesh(geometry, material);
+        sphere.name = "ALoc"
+        sphere.position.copy(dict[0].pos)
+
+        const div = document.createElement('div');
+        const text = `${loc.x}<br>${loc.y}<br>${loc.z}`;
+        div.innerHTML = text;
+        div.className = 'ALoc';
+        div.style.color = '#16b523';
+        div.style.fontSize = '12px';
+        div.style.fontWeight = 'bold';
+        div.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        div.style.padding = '2px';
+        div.style.marginLeft = '16px';
+        div.style.textAlign = 'right';
+
+        const label = new CSS2DObject(div);
+        label.name = "label";
+        label.position.set(0, 0, 0);
+        label.center.set(1, 1);
+
+        sphere.add(label)
+        Mol.add(sphere)
+    }
+
+    if (Object.keys(dict).length == 2) {
+        console.log("measure bond length")
+
+        const posA = dict[0].pos;
+        const posB = dict[1].pos;
+
+        const cylinder = makeLineSegment(posA, posB)
+
+        Mol.add(cylinder)
+    }
+
+    if (Object.keys(dict).length == 3) {
+        console.log("measure associated lengths")
+
+        const posA = dict[0].pos.clone();
+        const posB = dict[1].pos.clone();
+        const posC = dict[2].pos.clone();
+
+        const cylinderBA = makeLineSegment(posB, posA)
+        const cylinderBC = makeLineSegment(posB, posC)
+
+        Mol.add(cylinderBA)
+        Mol.add(cylinderBC)
+
+        console.log("measure bond angle")
+
+        const vecBC = new THREE.Vector3().subVectors(posC, posB).normalize().multiplyScalar(ANGLE_RADIUS);
+        const vecBA = new THREE.Vector3().subVectors(posA, posB).normalize().multiplyScalar(ANGLE_RADIUS);
+
+        // Compute angle between vector BC and vector BA
+        const dotProduct = vecBA.dot(vecBC);
+        const magBC = vecBC.length();
+        const magBA = vecBA.length();
+        const cosineAngle = dotProduct / (magBC * magBA);
+        const theta = Math.acos(cosineAngle);
+        const thetaDeg = Math.abs(theta) * 180 / Math.PI;
+
+        const material = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(0xffae17),
+            depthTest: false,
+            depthWrite: false,
+            transparent: true,
+            opacity: 0.5,
+            side: THREE.DoubleSide,
+        });
+
+        // Build angle fan geometry
+        let vertices = [
+            posB.x, posB.y, posB.z,
+            posA.x, posA.y, posA.z
+        ];
+
+        // Calculate equally spaced points along A-C edge
+        const numPoints = 129;
+        const vecMid = new THREE.Vector3(0, 0, 0);
+        for (let i = 0; i <= numPoints; i++) {
+
+            // Find edge point on A-C segment
+            const t = i / numPoints;
+            const edgePoint = new THREE.Vector3().lerpVectors(posA, posC, t);
+
+            // Find the vector from B to edge point
+            const toPoint = new THREE.Vector3().subVectors(edgePoint, posB);
+            toPoint.normalize().multiplyScalar(ANGLE_RADIUS);
+
+            // Add the point back to vector B
+            const finalPoint = new THREE.Vector3().addVectors(posB, toPoint);
+            if (i == 64) {
+                vecMid.copy(finalPoint)
+            }
+            vertices.push(finalPoint.x, finalPoint.y, finalPoint.z);
+        }
+        vertices.push(posC.x, posC.y, posC.z)
+
+        const float32Vertices = new Float32Array(vertices);
+        const geometryFan = new THREE.BufferGeometry();
+        geometryFan.setAttribute('position', new THREE.BufferAttribute(float32Vertices, 3));
+
+        // Create indices for a triangle fan starting from the center (index 0)
+        const indices = [];
+        const totalVertices = vertices.length / 3;
+        for (let i = 1; i < totalVertices - 1; i++) {
+            indices.push(0, i, i + 1);
+        }
+
+        geometryFan.setIndex(indices);
+        geometryFan.computeVertexNormals();
+
+        let discMesh = null;
+
+        const geometrySemiCirc = new THREE.CircleGeometry(1, 32, 0, Math.PI);
+        const tolerance = 0.05;
+        const deltaPI = Math.abs(theta - Math.PI)
+
+        if (!(deltaPI < tolerance)) {
+            // If angle is not close to 180, use fan geometry
+            discMesh = new THREE.Mesh(geometryFan, material);
+
+        } else {
+            // If angle is close to 180, use semicircle geometry
+            const quaternion = new THREE.Quaternion();
+            const defaultDirection = new THREE.Vector3(1, 0, 0);
+            quaternion.setFromUnitVectors(defaultDirection, vecBC);
+
+            discMesh = new THREE.Mesh(geometrySemiCirc, material);
+            discMesh.quaternion.copy(quaternion);
+            discMesh.position.copy(posB);
+        }
+        discMesh.name = "BAngle"
+
+        const div = document.createElement('div');
+        const text = `${Math.round(thetaDeg * 100) / 100}`;
+        div.innerHTML = text;
+        div.className = 'BAngle';
+        div.style.color = '#ff5c00';
+        div.style.fontSize = '12px';
+        div.style.fontWeight = 'bold';
+        div.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        div.style.padding = '2px';
+
+        const label = new CSS2DObject(div);
+        label.name = "label";
+        if (!(deltaPI < tolerance)) {
+            label.position.copy(vecMid);
+            label.center.set(0.5, 0.5);
+        } else {
+            label.position.set(0, 0, 0);
+            label.center.set(1, 1);
+        }
+
+        discMesh.add(label)
+        Mol.add(discMesh)
+    }
+    return
+}
+
+function makeLineSegment(posA, posB) {
+    const distance = new THREE.Vector3().subVectors(posA, posB);
+    const length = distance.length()
+    const midpoint = new THREE.Vector3().addVectors(posA, posB).multiplyScalar(0.5);
+    const axis = new THREE.Vector3(0, 1, 0);
+
+    const geometry = new THREE.CylinderGeometry(0.05, 0.05, length, 8);
+    const material = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(0, 1, 1),
+        depthTest: false,
+        depthWrite: false,
+        transparent: true,
+        opacity: 0.5,
+    });
+
+    const cylinder = new THREE.Mesh(geometry, material);
+    cylinder.position.copy(midpoint);
+    cylinder.quaternion.setFromUnitVectors(axis, distance.normalize());
+    cylinder.name = "BLength"
+
+    const div = document.createElement('div');
+    const text = `${Math.round(length * 1000) / 1000}`;
+    div.innerHTML = text;
+    div.className = 'BLength';
+    div.style.color = '#0ffaf6';
+    div.style.fontSize = '12px';
+    div.style.fontWeight = 'bold';
+    div.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    div.style.padding = '2px';
+
+    const label = new CSS2DObject(div);
+    label.name = "label";
+    label.position.set(0, 0, 0);
+    label.center.set(0.5, 0.5);
+
+    cylinder.add(label)
+    return cylinder
+}
+
+
+//###########################################
+//##  Molecular Builder Functions
+//###########################################
+
 function makeMolGroup(data) {
     const molGroup = new THREE.Group();
     molGroup.name = "MolGroup";
@@ -613,7 +628,6 @@ function makeAtomGroup(atoms) {
         const geometry = new THREE.SphereGeometry(size, 30, 30);
         const sphere = new THREE.Mesh(geometry, material);
         sphere.name = "atom";
-        sphere.userData.atomListNumber = i;
 
         if (!atomCount[n]) { atomCount[n] = 1; } else { atomCount[n] += 1; }
 
@@ -621,6 +635,7 @@ function makeAtomGroup(atoms) {
         const outlineGeometry = new THREE.SphereGeometry(size + 0.12, 30, 30); // Slightly larger for outline
         const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
         outline.name = "OutlineAtom"
+        outline.userData.highlighted = false;
 
         sphere.position.set(x, y, z);
         outline.position.set(x, y, z)
@@ -710,44 +725,6 @@ function makeBondGroup(atoms) {
     }
 
     return bondGroup;
-}
-
-function makeBlen(A, B) {
-    const distVec = new THREE.Vector3().subVectors(A, B);
-    const bLength = distVec.length()
-    const midpoint = new THREE.Vector3().addVectors(A, B).multiplyScalar(0.5);
-    const axis = new THREE.Vector3(0, 1, 0);
-
-    const geometry = new THREE.CylinderGeometry(0.05, 0.05, bLength, 8);
-    const material = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(0, 1, 1),
-        depthTest: false,
-        depthWrite: false,
-        transparent: true,
-        opacity: 0.5,
-    });
-    const cyl = new THREE.Mesh(geometry, material);
-    cyl.position.copy(midpoint);
-    cyl.quaternion.setFromUnitVectors(axis, distVec.normalize());
-    cyl.name = "BLength"
-
-    const div = document.createElement('div');
-    const text = `${Math.round(bLength * 1000) / 1000}`;
-    div.innerHTML = text;
-    div.className = 'BLength';
-    div.style.color = '#0ffaf6';
-    div.style.fontSize = '12px';
-    div.style.fontWeight = 'bold';
-    div.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    div.style.padding = '2px';
-
-    const label = new CSS2DObject(div);
-    label.name = "label";
-    label.position.set(0, 0, 0);
-    label.center.set(0.5, 0.5);
-
-    cyl.add(label)
-    return cyl
 }
 
 main();
