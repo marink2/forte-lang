@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-const CAM_ZOOM = 30;
+const CAM_ZOOM = 100;
 const BKG_COLOR = 'black';
 const MOL_ROT_SPEED = 0.01;
 const MOL_STICK_REP = false;
@@ -9,43 +9,389 @@ const ANGLE_RADIUS = 1.0;
 const BOND_CUTOFF = 2.8;
 const BOND_RADIUS = 0.25;
 const ATOM_SCALE = 0.20;
+
 const ATOM_COLOR = [
-    0xd8d4d4,   // Bond Color
-    0xc5c5c5,   // H
-    0xc3f7f6,   // He
-    0xd3a8ed,   // Li
-    0xb7eda1,   // Be
-    0xf5b8bf,   // B
-    0x2e2d2d,   // C
-    0x2f41ba,   // N
-    0xde1f0d,   // O
-    0x1bf534    // F
+    0xD8D4D4,   // Bond Color
+    0xC5C5C5,   // H
+    0xD5FFFD,   // He
+
+    0xCC7EFF,   // Li
+    0xC5FE01,   // Be
+    0xFFB6BB,   // B
+    0x2E2D2D,   // C
+    0x2F41BA,   // N
+    0xDE1F0D,   // O
+    0xD5F240,   // F
+    0xAFE3F3,   // Ne
+
+    0xAB5EF2,   // Na
+    0x87FF00,   // Mg
+    0xD4A4A5,   // Al
+    0x819A9B,   // Si
+    0xFF8103,   // P
+    0xFEFF02,   // S
+    0x1FEF21,   // Cl
+    0x7FD1E6,   // Ar
+
+    0x8F41D4,   // K
+    0x3AFF00,   // Ca
+    0xE5E6E3,   // Sc
+    0xC1C3C4,   // Ti
+    0xA7A5AD,   // V
+    0x8D99CA,   // Cr
+    0x9B7DC7,   // Mn
+    0x817CC4,   // Fe
+    0x707CC1,   // Co
+    0x607CC2,   // Ni
+    0xFE7A61,   // Cu
+    0x7C82B2,   // Zn
+    0xC19492,   // Ga
+    0x639491,   // Ge
+    0xBE83E2,   // As
+    0xFFA200,   // Se
+    0xAA2A29,   // Br
+    0x5CBAD1,   // Kr
+
+    0x752EAE,   // Rb
+    0x00FF03,   // Sr
+    0x98FEFF,   // Y
+    0x94E2E1,   // Zr
+    0x73C3CC,   // Nb
+    0x56B5B7,   // Mo
+    0x3BA0A9,   // Tc
+    0x248D95,   // Ru
+    0x067E8C,   // Rh
+    0x006985,   // Pd
+    0x98C5FF,   // Ag
+    0xFFD990,   // Cd
+    0xA87673,   // In
+    0x678281,   // Sn
+    0xA065B7,   // Sb
+    0xD57B01,   // Te
+    0x930093,   // I
+    0x429FAF,   // Xe
+
+    0x551991,   // Cs
+    0x00CB01,   // Ba
+    0x6FE0FC,   // La
+    0xFFFFC8,   // Ce
+    0xDAFFC8,   // Pr
+    0xC6FFC7,   // Nd
+    0xA4FFC7,   // Pm
+    0x91FFC8,   // Sm
+    0x60FFC9,   // Eu
+    0x46FFC6,   // Gd
+    0x32FFC7,   // Tb
+    0x22FEB9,   // Dy
+    0x00FF9E,   // Ho
+    0x01E776,   // Er
+    0x00D453,   // Tm
+    0x03BD38,   // Yb
+    0x01AD23,   // Lu
+    0x4DC2FF,   // Hf
+    0x4BA8FF,   // Ta
+    0x2896D6,   // W
+    0x297EAF,   // Re
+    0x256898,   // Os
+    0x165589,   // Ir
+    0x175C96,   // Pt
+    0xFED126,   // Au
+    0xB3B6C3,   // Hg
+    0xA5564F,   // Tl
+    0x585A5E,   // Pb
+    0xA04EB3,   // Bi
+    0xAD5D00,   // Po
+    0x794C46,   // At
+    0x428395,   // Rn
+
+    0x430066,   // Fr
+    0x037D00,   // Ra
+    0x70A9FD,   // Ac
+    0x01B9FF,   // Th
+    0x00A3FF,   // Pa
+    0xF6B305,   // U
+    0x0083F4,   // Np
+    0x006DF2,   // Pu
+    0x535BEF,   // Am
+    0x765BE8,   // Cm
+    0x8A4DE6,   // Bk
+    0x9E38D5,   // Cf
+    0xB21ED9,   // Es
+    0xB322B9,   // Fm
+    0xB60CA5,   // Md
+    0xBF0B8A,   // No
+    0xC90068,   // Lr
+    0x9B7CC9,   // Rf
+    0x9B7CC9,   // Db
+    0x9B7CC9,   // Sg
+    0x9B7CC9,   // Bh
+    0x9B7CC9,   // Hs
+    0xA8A7AC,   // Mt
+    0xA8A7AC,   // Ds
+    0xA8A7AC,   // Rg
+    0xA8A7AC,   // Cn
+    0xA8A7AC,   // Nh
+    0xA8A7AC,   // Fl
+    0xA8A7AC,   // Mc
+    0xA8A7AC,   // Lv
+    0xA8A7AC,   // Ts
+    0xA8A7AC    // Og
 ];
 
 const LABEL_COLOR = [
-    0xd8d4d4,   // Bond Color
-    0xa5a5a5,   // H
-    0xa3d7d6,   // He
-    0xb388cd,   // Li
-    0x97cd81,   // Be
-    0xd5989f,   // B
+    0xD8D4D4,   // Bond Color
+    0xA5A5A5,   // H
+    0xA3D7D6,   // He
+
+    0xB388CD,   // Li
+    0x97CD81,   // Be
+    0xD5989F,   // B
     0x999999,   // C
-    0x0f219a,   // N
-    0xae0f0d,   // O
-    0x0bd524    // F
+    0x0F219A,   // N
+    0xAE0F0D,   // O
+    0xA5C240,   // F
+    0x7FB3C3,   // Ne
+
+    0x7B2EC2,   // Na
+    0x57CED0,   // Mg
+    0xA47475,   // Al
+    0x585A5E,   // Si
+    0xFFB133,   // P
+    0xCECEB2,   // S
+    0x0BBEC1,   // Cl
+    0x4FA1B6,   // Ar
+
+    0x8F41D4,   // K
+    0x3AFF00,   // Ca
+    0xE5E6E3,   // Sc
+    0xC1C3C4,   // Ti
+    0xA7A5AD,   // V
+    0x8D99CA,   // Cr
+    0x9B7DC7,   // Mn
+    0x817CC4,   // Fe
+    0x707CC1,   // Co
+    0x607CC2,   // Ni
+    0xFE7A61,   // Cu
+    0x7C82B2,   // Zn
+    0xC19492,   // Ga
+    0x639491,   // Ge
+    0xBE83E2,   // As
+    0xFFA200,   // Se
+    0xAA2A29,   // Br
+    0x5CBAD1,   // Kr
+
+    0x752EAE,   // Rb
+    0x00FF03,   // Sr
+    0x98FEFF,   // Y
+    0x94E2E1,   // Zr
+    0x73C3CC,   // Nb
+    0x56B5B7,   // Mo
+    0x3BA0A9,   // Tc
+    0x248D95,   // Ru
+    0x067E8C,   // Rh
+    0x006985,   // Pd
+    0x98C5FF,   // Ag
+    0xFFD990,   // Cd
+    0xA87673,   // In
+    0x678281,   // Sn
+    0xA065B7,   // Sb
+    0xD57B01,   // Te
+    0x930093,   // I
+    0x429FAF,   // Xe
+
+    0x551991,   // Cs
+    0x00CB01,   // Ba
+    0x6FE0FC,   // La
+    0xFFFFC8,   // Ce
+    0xDAFFC8,   // Pr
+    0xC6FFC7,   // Nd
+    0xA4FFC7,   // Pm
+    0x91FFC8,   // Sm
+    0x60FFC9,   // Eu
+    0x46FFC6,   // Gd
+    0x32FFC7,   // Tb
+    0x22FEB9,   // Dy
+    0x00FF9E,   // Ho
+    0x01E776,   // Er
+    0x00D453,   // Tm
+    0x03BD38,   // Yb
+    0x01AD23,   // Lu
+    0x4DC2FF,   // Hf
+    0x4BA8FF,   // Ta
+    0x2896D6,   // W
+    0x297EAF,   // Re
+    0x256898,   // Os
+    0x165589,   // Ir
+    0x175C96,   // Pt
+    0xFED126,   // Au
+    0xB3B6C3,   // Hg
+    0xA5564F,   // Tl
+    0x585A5E,   // Pb
+    0xA04EB3,   // Bi
+    0xAD5D00,   // Po
+    0x794C46,   // At
+    0x428395,   // Rn
+
+    0x430066,   // Fr
+    0x037D00,   // Ra
+    0x70A9FD,   // Ac
+    0x01B9FF,   // Th
+    0x00A3FF,   // Pa
+    0xF6B305,   // U
+    0x0083F4,   // Np
+    0x006DF2,   // Pu
+    0x535BEF,   // Am
+    0x765BE8,   // Cm
+    0x8A4DE6,   // Bk
+    0x9E38D5,   // Cf
+    0xB21ED9,   // Es
+    0xB322B9,   // Fm
+    0xB60CA5,   // Md
+    0xBF0B8A,   // No
+    0xC90068,   // Lr
+    0x9B7CC9,   // Rf
+    0x9B7CC9,   // Db
+    0x9B7CC9,   // Sg
+    0x9B7CC9,   // Bh
+    0x9B7CC9,   // Hs
+    0xA8A7AC,   // Mt
+    0xA8A7AC,   // Ds
+    0xA8A7AC,   // Rg
+    0xA8A7AC,   // Cn
+    0xA8A7AC,   // Nh
+    0xA8A7AC,   // Fl
+    0xA8A7AC,   // Mc
+    0xA8A7AC,   // Lv
+    0xA8A7AC,   // Ts
+    0xA8A7AC    // Og
 ];
 
 const ATOM_LABEL = [
-    "EMPTY",
-    "H",
-    "He",
-    "Li",
-    "Be",
-    "B",
-    "C",
-    "N",
-    "O",
-    "F"
+    "Bond",     // Bond
+    "H",        // H
+    "He",       // He
+
+    "Li",       // Li
+    "Be",       // Be
+    "B",        // B
+    "C",        // C
+    "N",        // N
+    "O",        // O
+    "F",        // F
+    "Ne",       // Ne
+
+    "Na",       // Na
+    "Mg",       // Mg
+    "Al",       // Al
+    "Si",       // Si
+    "P",        // P
+    "S",        // S
+    "Cl",       // Cl
+    "Ar",       // Ar
+
+    "K",        // K
+    "Ca",       // Ca
+    "Sc",       // Sc
+    "Ti",       // Ti
+    "V",        // V
+    "Cr",       // Cr
+    "Mn",       // Mn
+    "Fe",       // Fe
+    "Co",       // Co
+    "Ni",       // Ni
+    "Cu",       // Cu
+    "Zn",       // Zn
+    "Ga",       // Ga
+    "Ge",       // Ge
+    "As",       // As
+    "Se",       // Se
+    "Br",       // Br
+    "Kr",       // Kr
+
+    "Rb",       // Rb
+    "Sr",       // Sr
+    "Y",        // Y
+    "Zr",       // Zr
+    "Nb",       // Nb
+    "Mo",       // Mo
+    "Tc",       // Tc
+    "Ru",       // Ru
+    "Rh",       // Rh
+    "Pd",       // Pd
+    "Ag",       // Ag
+    "Cd",       // Cd
+    "In",       // In
+    "Sn",       // Sn
+    "Sb",       // Sb
+    "Te",       // Te
+    "I",        // I
+    "Xe",       // Xe
+
+    "Cs",       // Cs
+    "Ba",       // Ba
+    "La",       // La
+    "Ce",       // Ce
+    "Pr",       // Pr
+    "Nd",       // Nd
+    "Pm",       // Pm
+    "Sm",       // Sm
+    "Eu",       // Eu
+    "Gd",       // Gd
+    "Tb",       // Tb
+    "Dy",       // Dy
+    "Ho",       // Ho
+    "Er",       // Er
+    "Tm",       // Tm
+    "Yb",       // Yb
+    "Lu",       // Lu
+    "Hf",       // Hf
+    "Ta",       // Ta
+    "W",        // W
+    "Re",       // Re
+    "Os",       // Os
+    "Ir",       // Ir
+    "Pt",       // Pt
+    "Au",       // Au
+    "Hg",       // Hg
+    "Tl",       // Tl
+    "Pb",       // Pb
+    "Bi",       // Bi
+    "Po",       // Po
+    "At",       // At
+    "Rn",       // Rn
+
+    "Fr",       // Fr
+    "Ra",       // Ra
+    "Ac",       // Ac
+    "Th",       // Th
+    "Pa",       // Pa
+    "U",        // U
+    "Np",       // Np
+    "Pu",       // Pu
+    "Am",       // Am
+    "Cm",       // Cm
+    "Bk",       // Bk
+    "Cf",       // Cf
+    "Es",       // Es
+    "Fm",       // Fm
+    "Md",       // Md
+    "No",       // No
+    "Lr",       // Lr
+    "Rf",       // Rf
+    "Db",       // Db
+    "Sg",       // Sg
+    "Bh",       // Bh
+    "Hs",       // Hs
+    "Mt",       // Mt
+    "Ds",       // Ds
+    "Rg",       // Rg
+    "Cn",       // Cn
+    "Nh",       // Nh
+    "Fl",       // Fl
+    "Mc",       // Mc
+    "Lv",       // Lv
+    "Ts",       // Ts
+    "Og"        // Og
 ];
 
 function main() {
@@ -80,7 +426,7 @@ function main() {
 
     const molecule = window.molecule;
     const Mol = makeMolGroup(molecule);
-    scene.add(Mol)
+    scene.add(Mol);
 
     //######################################
     //##  Event Listeners
@@ -95,6 +441,7 @@ function main() {
     let isDragging = false;
     let isSpacebarPressed = false;
     let isDelete = false;
+    let isSaved = false;
 
     document.body.style.overflow = "hidden";
 
@@ -106,7 +453,7 @@ function main() {
 
             // Remove measurement label if it is intersected
             const removedMeas = deselectMeas(intersects, Mol);
-            if (removedMeas) { return }
+            if (removedMeas) { return; }
 
             // Check if intersected is an atom group object
             let head = intersects[0].object;
@@ -114,7 +461,7 @@ function main() {
                 head = head.parent;
             }
 
-            if (!head.name) { return }
+            if (!head.name) { return; }
 
             // Highlight intersected atom group outline if not already highlighted
             head.children[1].userData.highlighted ^= true;
@@ -128,7 +475,7 @@ function main() {
                     scene.traverse((child) => {
                         if (child.name === "OutlineAtom") {
                             if (child.uuid === head.children[1].uuid) {
-                                return
+                                return;
                             }
                             child.material.color.set(0x000000);
                             child.userData.highlighted = false;
@@ -162,14 +509,14 @@ function main() {
                 }
             });
             posVals = 0;
-            Selected = {}
+            Selected = {};
         }
     });
-
+    const vscode = acquireVsCodeApi();
     document.addEventListener('keydown', (event) => {
         if (!isSpacebarPressed && event.key === ' ') {
             addMeasurement(Selected, Mol);
-            isSpacebarPressed = true
+            isSpacebarPressed = true;
         }
         if (!isDelete && event.key === 'c') {
             Mol.children.slice().forEach((child, i) => {
@@ -178,7 +525,21 @@ function main() {
                     Mol.remove(child);
                 }
             });
-            isDelete = true
+            isDelete = true;
+        }
+        if (!isSaved && event.key === 's') {
+            let dataToSave = '';
+            Mol.children.slice().forEach((child, i) => {
+                if (child.name === "BLength" || child.name === "BAngle") {
+                    dataToSave += child.userData.measText + '\n';
+                }
+            });
+            console.log("save");
+            vscode.postMessage({
+                command: 'copyToClipboard',
+                text: dataToSave,
+            });
+            isSaved = true;
         }
         if (event.key === 'b') {
             scene.background.r ^= true;
@@ -189,10 +550,13 @@ function main() {
 
     document.addEventListener('keyup', (event) => {
         if (isSpacebarPressed && event.key === ' ') {
-            isSpacebarPressed = false
+            isSpacebarPressed = false;
         }
         if (isDelete && event.key === 'c') {
-            isDelete = false
+            isDelete = false;
+        }
+        if (isSaved && event.key === 's') {
+            isSaved = false;
         }
     });
 
@@ -214,11 +578,11 @@ function main() {
 
         if (!isDragging) return;
 
-        // Calculate the change in mouse position
+        // Calculate change in mouse position
         const deltaX = event.clientX - lastMouse.x;
         const deltaY = event.clientY - lastMouse.y;
 
-        // Update the mouse positions
+        // Update mouse position
         lastMouse.x = event.clientX;
         lastMouse.y = event.clientY;
 
@@ -271,6 +635,7 @@ function main() {
             { label: 'Make Measurement', action: 'Spacebar' },
             { label: 'Clear All Meas.', action: 'C' },
             { label: 'Bkg. Color', action: 'B' },
+            { label: 'Save Meas.', action: 'S' },
             { label: 'Zoom in/out', action: 'Scroll' }
         ];
 
@@ -299,11 +664,11 @@ function main() {
         // Remove existing menu (if any)
         document.body.querySelectorAll('.custom-context-menu').forEach((el) => el.remove());
 
-        // Add the menu to the body
+        // Add menu to body
         menu.className = 'custom-context-menu';
         document.body.appendChild(menu);
 
-        // Remove the menu on click elsewhere
+        // Remove menu on click elsewhere
         document.addEventListener(
             'click',
             () => {
@@ -359,10 +724,10 @@ function deselectMeas(intersects, Mol) {
                     Mol.remove(child);
                 }
             });
-            removedMeas = true
+            removedMeas = true;
         }
     });
-    return removedMeas
+    return removedMeas;
 }
 
 
@@ -372,11 +737,11 @@ function deselectMeas(intersects, Mol) {
 
 function addMeasurement(dict, Mol) {
     if (Object.keys(dict).length == 0) {
-        console.log("no selection to measure")
+        console.log("no selection to measure");
     }
 
     if (Object.keys(dict).length == 1) {
-        console.log("measure atom location")
+        console.log("measure atom location");
         const loc = dict[0].pos.clone();
         loc.set(
             Math.round(loc.x * 1000) / 1000,
@@ -394,8 +759,8 @@ function addMeasurement(dict, Mol) {
         });
 
         const sphere = new THREE.Mesh(geometry, material);
-        sphere.name = "ALoc"
-        sphere.position.copy(dict[0].pos)
+        sphere.name = "ALoc";
+        sphere.position.copy(dict[0].pos);
 
         const div = document.createElement('div');
         const text = `${loc.x}<br>${loc.y}<br>${loc.z}`;
@@ -414,35 +779,55 @@ function addMeasurement(dict, Mol) {
         label.position.set(0, 0, 0);
         label.center.set(1, 1);
 
-        sphere.add(label)
-        Mol.add(sphere)
+        sphere.add(label);
+        Mol.add(sphere);
     }
 
     if (Object.keys(dict).length == 2) {
-        console.log("measure bond length")
+        console.log("measure bond length");
 
         const posA = dict[0].pos;
         const posB = dict[1].pos;
 
-        const cylinder = makeLineSegment(posA, posB)
+        const [cylinder, text] = makeLineSegment(posA, posB);
 
-        Mol.add(cylinder)
+        const atomA = Mol.getObjectByProperty('uuid', dict[0].uuid);
+        const atomB = Mol.getObjectByProperty('uuid', dict[1].uuid);
+        const textA = atomA.userData.atomLabel;
+        const textB = atomB.userData.atomLabel;
+        const measText = `${textA}-${textB}:\t\t${text}`;
+
+        cylinder.userData.measText = measText;
+
+        Mol.add(cylinder);
     }
 
     if (Object.keys(dict).length == 3) {
-        console.log("measure associated lengths")
+        console.log("measure associated lengths");
 
         const posA = dict[0].pos.clone();
         const posB = dict[1].pos.clone();
         const posC = dict[2].pos.clone();
 
-        const cylinderBA = makeLineSegment(posB, posA)
-        const cylinderBC = makeLineSegment(posB, posC)
+        const [cylinderBA, textBA] = makeLineSegment(posB, posA);
+        const [cylinderBC, textBC] = makeLineSegment(posB, posC);
 
-        Mol.add(cylinderBA)
-        Mol.add(cylinderBC)
+        const atomA = Mol.getObjectByProperty('uuid', dict[0].uuid);
+        const atomB = Mol.getObjectByProperty('uuid', dict[1].uuid);
+        const atomC = Mol.getObjectByProperty('uuid', dict[2].uuid);
+        const textA = atomA.userData.atomLabel;
+        const textB = atomB.userData.atomLabel;
+        const textC = atomC.userData.atomLabel;
+        const measTextBA = `${textB}-${textA}:\t\t${textBA}`;
+        const measTextBC = `${textB}-${textC}:\t\t${textBC}`;
 
-        console.log("measure bond angle")
+        cylinderBA.userData.measText = measTextBA;
+        cylinderBC.userData.measText = measTextBC;
+
+        Mol.add(cylinderBA);
+        Mol.add(cylinderBC);
+
+        console.log("measure bond angle");
 
         const vecBC = new THREE.Vector3().subVectors(posC, posB).normalize().multiplyScalar(ANGLE_RADIUS);
         const vecBA = new THREE.Vector3().subVectors(posA, posB).normalize().multiplyScalar(ANGLE_RADIUS);
@@ -486,11 +871,11 @@ function addMeasurement(dict, Mol) {
             // Add the point back to vector B
             const finalPoint = new THREE.Vector3().addVectors(posB, toPoint);
             if (i == 64) {
-                vecMid.copy(finalPoint)
+                vecMid.copy(finalPoint);
             }
             vertices.push(finalPoint.x, finalPoint.y, finalPoint.z);
         }
-        vertices.push(posC.x, posC.y, posC.z)
+        vertices.push(posC.x, posC.y, posC.z);
 
         const float32Vertices = new Float32Array(vertices);
         const geometryFan = new THREE.BufferGeometry();
@@ -510,7 +895,7 @@ function addMeasurement(dict, Mol) {
 
         const geometrySemiCirc = new THREE.CircleGeometry(1, 32, 0, Math.PI);
         const tolerance = 0.05;
-        const deltaPI = Math.abs(theta - Math.PI)
+        const deltaPI = Math.abs(theta - Math.PI);
 
         if (!(deltaPI < tolerance)) {
             // If angle is not close to 180, use fan geometry
@@ -526,7 +911,7 @@ function addMeasurement(dict, Mol) {
             discMesh.quaternion.copy(quaternion);
             discMesh.position.copy(posB);
         }
-        discMesh.name = "BAngle"
+        discMesh.name = "BAngle";
 
         const div = document.createElement('div');
         const text = `${Math.round(thetaDeg * 100) / 100}`;
@@ -548,15 +933,17 @@ function addMeasurement(dict, Mol) {
             label.center.set(1, 1);
         }
 
-        discMesh.add(label)
-        Mol.add(discMesh)
+        const measTextABC = `∠${textA},${textB},${textC}:\t${text}`;
+        discMesh.userData.measText = measTextABC;
+        discMesh.add(label);
+        Mol.add(discMesh);
     }
-    return
+    return;
 }
 
 function makeLineSegment(posA, posB) {
     const distance = new THREE.Vector3().subVectors(posA, posB);
-    const length = distance.length()
+    const length = distance.length();
     const midpoint = new THREE.Vector3().addVectors(posA, posB).multiplyScalar(0.5);
     const axis = new THREE.Vector3(0, 1, 0);
 
@@ -572,7 +959,7 @@ function makeLineSegment(posA, posB) {
     const cylinder = new THREE.Mesh(geometry, material);
     cylinder.position.copy(midpoint);
     cylinder.quaternion.setFromUnitVectors(axis, distance.normalize());
-    cylinder.name = "BLength"
+    cylinder.name = "BLength";
 
     const div = document.createElement('div');
     const text = `${Math.round(length * 1000) / 1000}`;
@@ -589,8 +976,8 @@ function makeLineSegment(posA, posB) {
     label.position.set(0, 0, 0);
     label.center.set(0.5, 0.5);
 
-    cylinder.add(label)
-    return cylinder
+    cylinder.add(label);
+    return [cylinder, text];
 }
 
 
@@ -634,17 +1021,18 @@ function makeAtomGroup(atoms) {
         const outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
         const outlineGeometry = new THREE.SphereGeometry(size + 0.12, 30, 30); // Slightly larger for outline
         const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
-        outline.name = "OutlineAtom"
+        outline.name = "OutlineAtom";
         outline.userData.highlighted = false;
 
         sphere.position.set(x, y, z);
-        outline.position.set(x, y, z)
+        outline.position.set(x, y, z);
 
 
         const div = document.createElement('div');
-        div.innerHTML = `${ATOM_LABEL[n]}${atomCount[n]}`;
+        const text = `${ATOM_LABEL[n]}${atomCount[n]}`;
+        div.innerHTML = text;
         div.className = "atomLabel";
-        div.style.color = '#' + LABEL_COLOR[n].toString(16).padStart(6, '0');;
+        div.style.color = '#' + LABEL_COLOR[n].toString(16).padStart(6, '0');
         div.style.fontSize = '12px';
         div.style.fontWeight = 'bold';
         div.style.backgroundColor = 'transparent';
@@ -654,7 +1042,8 @@ function makeAtomGroup(atoms) {
         label.position.set(0, 0, 0);
         label.center.set(0.5, 0.5);
 
-        sphere.add(label)
+        sphere.add(label);
+        sphere.userData.atomLabel = text;
 
         const atomG = new THREE.Group();
         atomG.name = "atomG";
@@ -717,9 +1106,9 @@ function makeBondGroup(atoms) {
         const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
         const outlineMidpoint = new THREE.Vector3().addVectors(posVecI, posVecJ).multiplyScalar(0.5);
         const outlineDirection = new THREE.Vector3().subVectors(posVecJ, posVecI);
-        outline.position.copy(outlineMidpoint)
+        outline.position.copy(outlineMidpoint);
         outline.quaternion.setFromUnitVectors(axis, outlineDirection.normalize());
-        outline.name = "OutlineBond"
+        outline.name = "OutlineBond";
 
         return [cylinderI, cylinderJ, outline];
     }
