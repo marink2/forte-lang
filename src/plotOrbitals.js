@@ -37,7 +37,7 @@ function plotOrbitals(cubeFiles, extensionUri, folderName, iconPath) {
 
                 // Prepare the webview content
                 const scriptUri = panel.webview.asWebviewUri(
-                    vscode.Uri.joinPath(extensionUri, 'src', 'script.js')
+                    vscode.Uri.joinPath(extensionUri, 'src', 'scriptOrbitals.js')
                 );
                 panel.webview.html = getWebviewContent(allCubeData, scriptUri);
 
