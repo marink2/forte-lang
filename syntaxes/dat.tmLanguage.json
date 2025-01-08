@@ -40,8 +40,8 @@
 			"patterns": [
 				{
 					"name": "string.quoted.double.dat",
-					"begin": "\"",
-					"end": "\"",
+					"begin": "(?<!\\w)\"",
+					"end": "\"(?!\\w)",
 					"patterns": [
 						{
 							"name": "constant.character.escape.dat",
@@ -116,7 +116,7 @@
 		},
 		"irreps": {
 			"name": "constant.character.escape.dat",
-			"match": "\\b(\\d+)?([AB][1-3]|[A][GgUu]|[B][1-3][GgUu]|[A][Pp]{1,2})\\b",
+			"match": "\\b(\\d+)?([AB][1-3]|[A][GgUu]|[B][Gg]|[B][Uu]|[B][1-3][GgUu]|[A]([P]{1,2}|[p]{1,2}))\\b",
 			"captures": {
 				"1": {
 					"name": "invalid.dat"
