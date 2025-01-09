@@ -1,11 +1,12 @@
 const vscode = require('vscode');
+const fs = require('fs');
+const path = require('path');
 const DatCompletionProvider = require('./DatCompletionProvider');
 const DatHoverProvider = require('./DatHoverProvider');
 const DatDocumentFormatter = require('./DatDocumentFormatter');
+const runPsi4Bash = require('./runPsi4Bash');
 const plotOrbitals = require('./plotOrbitals');
 const plotMolecule = require('./plotMolecule');
-const fs = require('fs');
-const path = require('path');
 
 function activate(context) {
 
@@ -20,6 +21,9 @@ function activate(context) {
     const formatter = new DatDocumentFormatter();
     const formatterDisposable = vscode.languages.registerDocumentFormattingEditProvider({ language: 'dat' }, formatter);
     context.subscriptions.push(formatterDisposable);
+
+    const executableDisposable = vscode.commands.registerCommand('extension.runPsi4Bash', function () { runPsi4Bash(); });
+    context.subscriptions.push(executableDisposable);
 
     const extensionUri = context.extensionUri;
     const iconPath = vscode.Uri.file(path.join(context.extensionPath, 'assets', 'OrbPlotterIcon.svg'));

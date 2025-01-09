@@ -53,8 +53,12 @@
         "title": "Plot Molecule"
       },
       {
-        "command": "extension.HeyListen",
-        "title": "It's dangerous to go alone! Take this! 🗡️"
+        "command": "extension.runPsi4Bash",
+        "title": "Run psi4",
+        "icon": {
+          "light": "assets/RunPsi4IconLight.svg",
+          "dark": "assets/RunPsi4IconDark.svg"
+        }
       }
     ],
     "keybindings": [
@@ -70,10 +74,11 @@
       }
     ],
     "menus": {
-      "webview/context": [
+      "editor/title/run": [
         {
-          "command": "extension.HeyListen",
-          "when": "webviewId == OrbPlotter"
+          "command": "extension.runPsi4Bash",
+          "when": "editorLangId == dat",
+          "group": "navigation@0"
         }
       ]
     }
