@@ -145,7 +145,7 @@ function plotMolecule(text, extensionUri, iconPathMol) {
     panel.iconPath = iconPathMol;
     // Prepare the webview content
     const scriptUri = panel.webview.asWebviewUri(
-        vscode.Uri.joinPath(extensionUri, 'src', 'scriptMolecule.js')
+        vscode.Uri.joinPath(extensionUri, 'src', 'webview_scripts', 'scriptMolecule.js')
     );
     panel.webview.html = getWebviewContent(molecule, scriptUri);
     panel.webview.onDidReceiveMessage(
