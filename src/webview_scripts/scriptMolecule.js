@@ -2,13 +2,13 @@ import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 const CAM_ZOOM = 100;
-const BKG_COLOR = 'black';
+const BKG_COLOR = 'white';
 const MOL_ROT_SPEED = 0.01;
 const MOL_STICK_REP = false;
 const ANGLE_RADIUS = 1.0;
-const BOND_CUTOFF = 2.8;
-const BOND_RADIUS = 0.25;
-const ATOM_SCALE = 0.20;
+let BOND_RADIUS = 0.25;
+let BOND_CUTOFF = 2.88;
+let ATOM_SCALE = 2;
 
 const ATOM_COLOR = [
     0xD8D4D4,   // Bond Color
@@ -425,7 +425,7 @@ function main() {
     //######################################
 
     const molecule = window.molecule;
-    const Mol = makeMolGroup(molecule);
+    let Mol = makeMolGroup(molecule);
     scene.add(Mol);
 
     //######################################
@@ -676,6 +676,58 @@ function main() {
             },
             { once: true }
         );
+    });
+
+    // Change units by double clicking on units label
+    const labelUnits = document.createElement('div');
+    labelUnits.innerText = "Bohr";
+    labelUnits.style.position = 'absolute';
+    labelUnits.style.bottom = '10px';
+    labelUnits.style.left = '30px';
+    labelUnits.style.color = 'white';
+    labelUnits.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    labelUnits.style.padding = '5px';
+    labelUnits.style.borderRadius = '3px';
+    labelUnits.style.fontSize = '12px';
+    labelUnits.style.fontFamily = 'Helvetica Neue';
+    labelUnits.style.userSelect = 'none';
+    document.body.appendChild(labelUnits);
+
+    labelUnits.addEventListener('dblclick', () => {
+        // Toggle units label
+        labelUnits.innerHTML = (labelUnits.innerHTML === "Bohr") ? "Angs" : "Bohr";
+
+        // Remove current Mol group and children
+        if (Mol) {
+            Mol.traverse((child) => {
+                if (child.isMesh) {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach((mat) => mat.dispose());
+                        } else {
+                            child.material.dispose();
+                        }
+                    }
+                }
+
+                if (child.isCSS2DObject && child.parent) {
+                    child.parent.remove(child);
+                }
+            });
+            scene.remove(Mol);
+        }
+
+        // Reset selected list
+        posVals = 0;
+        Selected = {};
+
+        BOND_CUTOFF = (BOND_CUTOFF === 2.88) ? 1.525 : 2.88;
+        ATOM_SCALE = (ATOM_SCALE === 2) ? 4 : 2;
+        BOND_RADIUS = (BOND_RADIUS === 0.25) ? 0.125 : 0.25;
+
+        Mol = makeMolGroup(molecule);
+        scene.add(Mol);
     });
 
     function resize() {
@@ -1011,7 +1063,7 @@ function makeAtomGroup(atoms) {
 
     atoms.forEach(([n, x, y, z], i) => {
         const material = new THREE.MeshPhongMaterial({ color: ATOM_COLOR[n] });
-        const size = (MOL_STICK_REP) ? BOND_RADIUS : Math.pow(n, ATOM_SCALE) / 2;
+        const size = (MOL_STICK_REP) ? BOND_RADIUS : Math.pow(n, 0.2) / ATOM_SCALE;
         const geometry = new THREE.SphereGeometry(size, 30, 30);
         const sphere = new THREE.Mesh(geometry, material);
         sphere.name = "atom";
