@@ -18,7 +18,7 @@ function formatTextInsideBraces(text) {
             const value = rest.join(' ');
 
             // Format spacing
-            return `  ${key}${' '.repeat(Math.max(1, 60 - key.length))}${value}`;
+            return `  ${key}${' '.repeat(Math.max(1, 40 - key.length))}${value}`;
         });
 
         // Reconstruct the block with formatted lines
