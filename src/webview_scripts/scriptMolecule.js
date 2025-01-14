@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 const CAM_ZOOM = 100;
+const CAM_PAN_SPEED = 0.02;
 const BKG_COLOR = 'white';
 const MOL_ROT_SPEED = 0.01;
 const MOL_STICK_REP = false;
@@ -460,6 +461,7 @@ function main() {
     let isSpacebarPressed = false;
     let isDelete = false;
     let isSaved = false;
+    let isShifted = false;
 
     document.body.style.overflow = "hidden";
 
@@ -564,6 +566,9 @@ function main() {
             scene.background.b ^= true;
             scene.background.g ^= true;
         }
+        if (event.key === 'Shift') {
+            isShifted = true;
+        }
     });
 
     document.addEventListener('keyup', (event) => {
@@ -575,6 +580,9 @@ function main() {
         }
         if (isSaved && event.key === 's') {
             isSaved = false;
+        }
+        if (isShifted && event.key === 'Shift') {
+            isShifted = false;
         }
     });
 
@@ -604,19 +612,25 @@ function main() {
         lastMouse.x = event.clientX;
         lastMouse.y = event.clientY;
 
-        // Create quaternions for the rotation along the global axes
-        const deltaRotationX = new THREE.Quaternion();
-        const deltaRotationY = new THREE.Quaternion();
+        if (isShifted) {
+            // Translate camara
+            camera.position.x -= deltaX * CAM_PAN_SPEED;
+            camera.position.y += deltaY * CAM_PAN_SPEED;
+        } else {
+            // Create quaternions for the rotation along the global axes
+            const deltaRotationX = new THREE.Quaternion();
+            const deltaRotationY = new THREE.Quaternion();
 
-        // Apply rotation around the global Y-axis (horizontal drag)
-        deltaRotationY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), deltaX * MOL_ROT_SPEED);
+            // Apply rotation around the global Y-axis (horizontal drag)
+            deltaRotationY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), deltaX * MOL_ROT_SPEED);
 
-        // Apply rotation around the global X-axis (vertical drag)
-        deltaRotationX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * MOL_ROT_SPEED);
+            // Apply rotation around the global X-axis (vertical drag)
+            deltaRotationX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * MOL_ROT_SPEED);
 
-        // Combine the new rotations with the molecule's current quaternion
-        Mol.quaternion.multiplyQuaternions(deltaRotationY, Mol.quaternion);
-        Mol.quaternion.multiplyQuaternions(deltaRotationX, Mol.quaternion);
+            // Combine the new rotations with the molecule's current quaternion
+            Mol.quaternion.multiplyQuaternions(deltaRotationY, Mol.quaternion);
+            Mol.quaternion.multiplyQuaternions(deltaRotationX, Mol.quaternion);
+        }
     });
 
     document.addEventListener("wheel", (event) => {
