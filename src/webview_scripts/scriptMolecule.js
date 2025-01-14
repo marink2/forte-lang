@@ -9,6 +9,7 @@ const ANGLE_RADIUS = 1.0;
 let BOND_RADIUS = 0.25;
 let BOND_CUTOFF = 2.88;
 let ATOM_SCALE = 2;
+let COG = {};
 
 const ATOM_COLOR = [
     0xD8D4D4,   // Bond Color
@@ -425,6 +426,23 @@ function main() {
     //######################################
 
     const molecule = window.molecule;
+
+    const cog = molecule.reduce(
+        (acc, [_, x, y, z]) => {
+            acc.xSum += x;
+            acc.ySum += y;
+            acc.zSum += z;
+            return acc;
+        },
+        { xSum: 0, ySum: 0, zSum: 0 }
+    );
+
+    COG = {
+        x: cog.xSum / molecule.length,
+        y: cog.ySum / molecule.length,
+        z: cog.zSum / molecule.length
+    };
+
     let Mol = makeMolGroup(molecule);
     scene.add(Mol);
 
@@ -796,9 +814,9 @@ function addMeasurement(dict, Mol) {
         console.log("measure atom location");
         const loc = dict[0].pos.clone();
         loc.set(
-            Math.round(loc.x * 1000) / 1000,
-            Math.round(loc.y * 1000) / 1000,
-            Math.round(loc.z * 1000) / 1000
+            Math.round((loc.x + COG.x) * 1000) / 1000,
+            Math.round((loc.y + COG.y) * 1000) / 1000,
+            Math.round((loc.z + COG.z) * 1000) / 1000
         );
 
         const geometry = new THREE.SphereGeometry(0.3, 32, 32);
@@ -1076,8 +1094,8 @@ function makeAtomGroup(atoms) {
         outline.name = "OutlineAtom";
         outline.userData.highlighted = false;
 
-        sphere.position.set(x, y, z);
-        outline.position.set(x, y, z);
+        sphere.position.set(x - COG.x, y - COG.y, z - COG.z);
+        outline.position.set(x - COG.x, y - COG.y, z - COG.z);
 
 
         const div = document.createElement('div');
@@ -1112,7 +1130,7 @@ function makeBondGroup(atoms) {
     const bondGroup = new THREE.Group();
     bondGroup.name = "bondGroup";
 
-    const posVectors = atoms.map(([n, x, y, z]) => new THREE.Vector3(x, y, z));
+    const posVectors = atoms.map(([n, x, y, z]) => new THREE.Vector3(x - COG.x, y - COG.y, z - COG.z));
     const col = atoms.map(([n, x, y, z]) => n);
 
     for (let i = 0; i < atoms.length; i++) {
