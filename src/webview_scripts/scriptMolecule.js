@@ -8,7 +8,7 @@ const MOL_ROT_SPEED = 0.01;
 const MOL_STICK_REP = false;
 const ANGLE_RADIUS = 1.0;
 let BOND_RADIUS = 0.25;
-let BOND_CUTOFF = 2.88;
+let BOND_CUTOFF = 4;
 let ATOM_SCALE = 2;
 let COG = {};
 
@@ -663,12 +663,14 @@ function main() {
         const items = [
             { label: 'Select Atom', action: 'Doub-click' },
             { label: 'Deselect Atom', action: 'Doub-click' },
-            { label: 'Remove Measurement', action: 'Doub-click' },
             { label: 'Make Measurement', action: 'Spacebar' },
+            { label: 'Remove Measurement', action: 'Doub-click' },
+            { label: 'Save Meas.', action: 'S' },
             { label: 'Clear All Meas.', action: 'C' },
             { label: 'Bkg. Color', action: 'B' },
-            { label: 'Save Meas.', action: 'S' },
-            { label: 'Zoom in/out', action: 'Scroll' }
+            { label: 'Zoom in/out', action: 'Scroll' },
+            { label: 'Move scene', action: 'Shift + Drag' },
+            { label: 'Change units', action: 'Doub-click unit label' }
         ];
 
         items.forEach((item) => {
@@ -754,7 +756,7 @@ function main() {
         posVals = 0;
         Selected = {};
 
-        BOND_CUTOFF = (BOND_CUTOFF === 2.88) ? 1.525 : 2.88;
+        BOND_CUTOFF = (BOND_CUTOFF === 4) ? 2.117 : 4;
         ATOM_SCALE = (ATOM_SCALE === 2) ? 4 : 2;
         BOND_RADIUS = (BOND_RADIUS === 0.25) ? 0.125 : 0.25;
 
@@ -1145,15 +1147,68 @@ function makeBondGroup(atoms) {
     bondGroup.name = "bondGroup";
 
     const posVectors = atoms.map(([n, x, y, z]) => new THREE.Vector3(x - COG.x, y - COG.y, z - COG.z));
-    const col = atoms.map(([n, x, y, z]) => n);
+    const Znum = atoms.map(([n, x, y, z]) => n);
 
+    // Compute all possible unique bonds and properties
+    let possibleBonds = [];
     for (let i = 0; i < atoms.length; i++) {
         for (let j = i + 1; j < atoms.length; j++) {
             const distance = posVectors[i].distanceTo(posVectors[j]);
-            if (distance < BOND_CUTOFF) {
-                const [bondI, bondJ, outline] = buildBond(posVectors[i], posVectors[j], col[i], col[j]);
-                bondGroup.add(bondI, bondJ, outline);
+            const totZnum = Znum[i] + Znum[j];
+            const containsCarbon = Znum[i] === 6 || Znum[j] === 6;
+            possibleBonds.push({ i, j, distance, totZnum, containsCarbon });
+        }
+    }
+
+    // Sort bonds
+    possibleBonds.sort((a, b) => {
+        if (a.containsCarbon !== b.containsCarbon) {
+            return b.containsCarbon - a.containsCarbon; // Bonds with carbon
+        }
+        if (b.totZnum !== a.totZnum) {
+            return b.totZnum - a.totZnum; // Descending totZnum
+        }
+        return a.distance - b.distance; // Ascending bond length
+    });
+
+    // Bond counts for each atom
+    const bondCounts = Array(atoms.length).fill(0);
+
+    // Max allowed bonds for atoms
+    function canFormBond(atomIndex) {
+        const maxBonds = (() => {
+            switch (Znum[atomIndex]) {
+                case 6: return 4; // Carbon
+                case 3: return 1; // Lithium
+                case 1: return 1; // Hydrogen
+                case 5: return 3; // Boron
+                case 7: return 3; // Nitrogen
+                case 8: return 2; // Oxygen
+                case 9: return 1; // Fluorine
+                case 11: return 1; // Sodium
+                case 12: return 2; // Magnesium
+                case 13: return 3; // Aluminum
+                case 14: return 4; // Silicon
+                case 15: return 5; // Phosphorus
+                case 16: return 6; // Sulfur
+                case 17: return 1; // Chlorine
+                case 19: return 1; // Potassium
+                case 20: return 2; // Calcium
+                case 35: return 1; // Bromine
+                case 53: return 1; // Iodine
+                default: return 8; // Default for other elements
             }
+        })();
+        return bondCounts[atomIndex] < maxBonds;
+    }
+
+    // Make bonds
+    for (const { i, j, distance } of possibleBonds) {
+        if (distance < BOND_CUTOFF && canFormBond(i) && canFormBond(j)) {
+            const [bondI, bondJ, outline] = buildBond(posVectors[i], posVectors[j], Znum[i], Znum[j]);
+            bondGroup.add(bondI, bondJ, outline);
+            bondCounts[i]++;
+            bondCounts[j]++;
         }
     }
 
