@@ -4,23 +4,54 @@ This extension offers syntax highlighting, code snippets, option auto-completion
 
 ## Features
 
-* Sintax highlighting
+* **Snippets**: A selection of snippets are included and can be accessed by typing `_`.
 
-![](./assets/feature_highlight.gif)
+* **Language Support**: Syntax highlighting, option auto-completion and hover-over description display (both currently available only for Forte), and document reformatting.
 
-* Snippets
+| ![](assets/syntax_highlighting.gif) | ![](assets/language_support.gif) |
+|-------------------------------------|-----------------------------------|
 
-![](./assets/feature_snippets.gif)
+* **Molecule Viewer**: This feature allows users to highlight any molecule in Cartesian format and plot it (`Cmd/Ctrl + M`) in a webview. Right-clicking inside the webview panel opens a helpful menu with a list of options. Measurements can be made for bond lengths, bond angles, and atomic positions. Double-clicking on the units label (lower-left corner) changes the internal plotting logic (e.g., bond cutoff, atom radii, bond radii, etc.) to better visualize molecules provided in different units (Bohr or Angstrom). *Note: This does not change the units of the molecule itself*.
 
-* Forte options auto-completion and hover-over
+| ![](assets/mol_view.gif) | <img src="assets/mol_view_menu.png" alt="Molecule View Menu" style="width: 800px;">|
+|-------------------------------------|-----------------------------------|
 
-![](./assets/feature_completion.gif)
+* **Orbital Plotter**: This feature allows users to plot orbitals (`Cmd/Ctrl + O`) from `.cube` files by selecting the directory containing the files (individual file selection is currently not supported). Orbitals are plotted as voxels (isosurface plotting is coming soon). The orbital plotting interface consists of two independent columns; selecting an orbital toggles it between the two columns.
 
-* Reformatting for option blocks
+![](assets/orb_plot.gif)
 
-![](./assets/feature_reformatting.gif)
+* **Psi4 Run Button**: This feature executes a bash script located in the user’s `$HOME/Bin/` folder. To set up this feature, include a bash script named `fl_psi4_run_bash.sh` in your `$HOME/Bin/` folder with the commands you want to use to execute Psi4 when the button is pressed.
+  * Example `fl_psi4_run_bash.sh` file:
+
+  ```
+  #!/bin/sh
+  source activate my_conda_env
+  psi4
+  ```
+
+![](assets/run_psi4.gif)
 
 ### Version History
+
+#### 0.0.3
+
+* New Feature: Molecule viewer (`Cmd/Ctrl + M`)
+
+* New Feature: Orbital plotter (`Cmd/Ctrl + O`)
+
+* New Feature: Navigation menu button that executes the bash scrip `$HOME/Bin/fl_psi4_run_bash.sh`
+
+* Updated: Forte options now only auto-complete within the `set forte { ... }` block
+
+* Updated: Forte option suggestions now appear only when the option line is empty
+
+* Updated: Hover-over Forte option suggestions now trigger only within the `set forte { ... }` block
+
+* Updated: Reduced spacing between options and values when auto-reformatting the document
+
+* Fixed: Comments no longer get auto-formatted
+
+* Fixed: Highlighting for missing irreps
 
 #### 0.0.2
 
