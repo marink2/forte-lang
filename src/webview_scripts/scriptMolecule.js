@@ -462,6 +462,7 @@ function main() {
     let isDelete = false;
     let isSaved = false;
     let isShifted = false;
+    let isHidden = false;
 
     document.body.style.overflow = "hidden";
 
@@ -569,6 +570,14 @@ function main() {
         if (event.key === 'Shift') {
             isShifted = true;
         }
+        if (!isHidden && event.key === 'h') {
+            isHidden = true;
+            scene.traverse((obj) => {
+                if (obj.name === "atomLabel") {
+                    obj.visible = !obj.visible;
+                }
+            });
+        }
     });
 
     document.addEventListener('keyup', (event) => {
@@ -583,6 +592,9 @@ function main() {
         }
         if (isShifted && event.key === 'Shift') {
             isShifted = false;
+        }
+        if (isHidden && event.key === 'h') {
+            isHidden = false;
         }
     });
 
@@ -668,9 +680,10 @@ function main() {
             { label: 'Save Meas.', action: 'S' },
             { label: 'Clear All Meas.', action: 'C' },
             { label: 'Bkg. Color', action: 'B' },
-            { label: 'Zoom in/out', action: 'Scroll' },
-            { label: 'Move scene', action: 'Shift + Drag' },
-            { label: 'Change units', action: 'Doub-click unit label' }
+            { label: 'Hide Atom Labels', action: 'H' },
+            { label: 'Zoom In/Out', action: 'Scroll' },
+            { label: 'Move Scene', action: 'Shift + Drag' },
+            { label: 'Change Units', action: 'Doub-click unit label' }
         ];
 
         items.forEach((item) => {
@@ -1124,7 +1137,7 @@ function makeAtomGroup(atoms) {
         div.style.backgroundColor = 'transparent';
 
         const label = new CSS2DObject(div);
-        label.name = "label";
+        label.name = "atomLabel";
         label.position.set(0, 0, 0);
         label.center.set(0.5, 0.5);
 
