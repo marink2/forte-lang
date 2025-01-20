@@ -53,7 +53,7 @@ function plotOrbitals(cubeFiles, extensionUri, folderName, iconPath) {
 
 
 function parseCubeFile(cFileData) {
-    const lines = cFileData.split("\n");
+    const lines = cFileData.trimEnd().split("\n");
     const numAtoms = parseInt(lines[2].trim().split(/\s+/)[0], 10);
     const atomLines = [];
 
