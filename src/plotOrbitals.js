@@ -26,11 +26,13 @@ function plotOrbitals(cubeFiles, extensionUri, folderName, iconPath) {
                 // Update progress message (optional, useful for long tasks)
                 progress.report({ message: "Reading .cube files..." });
 
-                // Read all .cube files and parse them
+                // Read all .cube files, sort by file name, and parse them
                 const allCubeData = await Promise.all(
-                    cubeFiles.map((cubeFile) =>
-                        fs.promises.readFile(cubeFile, 'utf8').then(parseCubeFile)
-                    )
+                    cubeFiles
+                        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+                        .map((cubeFile) =>
+                            fs.promises.readFile(cubeFile, 'utf8').then(parseCubeFile)
+                        )
                 );
 
                 progress.report({ message: "Rendering orbitals..." });
