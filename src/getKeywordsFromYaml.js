@@ -1,9 +1,17 @@
+const vscode = require('vscode');
 const yaml = require('js-yaml');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 function getKeywordsFromYaml() {
-    const yamlFilePath = path.join(__dirname, 'options.yaml');
+    const config = vscode.workspace.getConfiguration('extension');
+    const yamlFilePath = path.join(os.homedir(), config.get('configYamlFilePath'));
+
+    // Check if Forte options.yaml file path is valid
+    if (!fs.existsSync(yamlFilePath)) {
+        return [null, yamlFilePath];
+    }
 
     try {
         const fileContents = fs.readFileSync(yamlFilePath, 'utf8');
@@ -32,8 +40,7 @@ function getKeywordsFromYaml() {
 
         return keywords;
     } catch (error) {
-        console.error('Error reading or parsing the YAML file:', error);
-        return [['error']];
+        return [['error', '', '', `${error}`]];
     }
 }
 

@@ -43,6 +43,32 @@
         "path": "./snippets/dat.code-snippets"
       }
     ],
+    "configuration": {
+      "type": "object",
+      "title": "forte-lang",
+      "properties": {
+        "extension.configYamlFilePath": {
+          "type": "string",
+          "default": "forte/forte/options.yaml",
+          "description": "Path to Forte options.yaml file."
+        },
+        "extension.configFormatterSpacing": {
+          "type": "number",
+          "default": 40,
+          "description": "Document formatter, option-value spacing."
+        },
+        "extension.configFormatterIndent": {
+          "type": "number",
+          "default": 2,
+          "description": "Document formatter, option indentation."
+        },
+        "extension.configProductivityTime": {
+          "type": "number",
+          "default": 15,
+          "description": "Countdown productivity timer."
+        }
+      }
+    },
     "commands": [
       {
         "command": "extension.plotOrbitals",
@@ -59,6 +85,14 @@
           "light": "assets/RunPsi4IconLight.svg",
           "dark": "assets/RunPsi4IconDark.svg"
         }
+      },
+      {
+        "command": "extension.flSettings",
+        "title": "forte-lang: settings"
+      },
+      {
+        "command": "extension.coffee",
+        "title": "set coffee break timer ☕️"
       }
     ],
     "keybindings": [
@@ -79,6 +113,14 @@
           "command": "extension.runPsi4Bash",
           "when": "editorLangId == dat",
           "group": "navigation@0"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "extension.flSettings"
+        },
+        {
+          "command": "extension.coffee"
         }
       ]
     }

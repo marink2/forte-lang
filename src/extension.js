@@ -4,9 +4,10 @@ const path = require('path');
 const DatCompletionProvider = require('./DatCompletionProvider');
 const DatHoverProvider = require('./DatHoverProvider');
 const DatDocumentFormatter = require('./DatDocumentFormatter');
-const runPsi4Bash = require('./runPsi4Bash');
+const { runPsi4Bash, timerProductivity } = require('./runPsi4Bash');
 const plotOrbitals = require('./plotOrbitals');
 const plotMolecule = require('./plotMolecule');
+const flSettings = require('./flSettings');
 
 function activate(context) {
 
@@ -24,6 +25,17 @@ function activate(context) {
 
     const executableDisposable = vscode.commands.registerCommand('extension.runPsi4Bash', function () { runPsi4Bash(); });
     context.subscriptions.push(executableDisposable);
+
+    const flSettingsDisposable = vscode.commands.registerCommand('extension.flSettings', async () => {
+        await flSettings();
+    });
+    context.subscriptions.push(flSettingsDisposable);
+
+    let cup = { val: null };
+    const coffee = vscode.commands.registerCommand('extension.coffee', () => {
+        timerProductivity(cup);
+    });
+    context.subscriptions.push(coffee);
 
     const extensionUri = context.extensionUri;
     const iconPath = vscode.Uri.file(path.join(context.extensionPath, 'assets', 'OrbPlotterIcon.svg'));

@@ -3,7 +3,7 @@ const getKeywordsFromYaml = require('./getKeywordsFromYaml');
 
 class DatHoverProvider {
     provideHover(document, position, token) {
-        const keywords = getKeywordsFromYaml();
+
         const wordRange = document.getWordRangeAtPosition(position);
 
         // Don't trigger hover if outside set forte { ... } block
@@ -29,6 +29,10 @@ class DatHoverProvider {
         const hoveredWord = document.getText(wordRange).toLowerCase();
 
         // Find if the hovered word matches a keyword
+        const keywords = getKeywordsFromYaml();
+        if (keywords[0] === null) {
+            return undefined;
+        }
         const matchedKeyword = keywords.find(keyword => keyword[0] === hoveredWord);
 
         if (matchedKeyword) {

@@ -34,7 +34,7 @@ function runPsi4Bash() {
     console.log(`Working Directory: ${workingDir}`);
 
     // Display execution comfirmation message on status bar
-    showStatusBarMessage();
+    showStatusBarMessage("Psi4 Executed");
 
     // Execute the bash script in the user's working directory
     exec(`bash "${scriptPath}"`, { cwd: workingDir }, (error, stdout, stderr) => {
@@ -102,12 +102,37 @@ function runPsi4Bash() {
     });
 }
 
-function showStatusBarMessage() {
+function timerProductivity(cup) {
+    const config = vscode.workspace.getConfiguration('extension');
+    const startTime = config.get('configProductivityTime');
+
+    // Clear any existing timer
+    if (cup.val) {
+        clearInterval(cup.val);
+        cup.val = null;
+        showStatusBarMessage(`$(loading~spin) Resetting Timer! ${startTime} min`);
+    } else {
+        showStatusBarMessage(`Timer Set! ${startTime} min`);
+    }
+
+    // Set time countdown for coffee
+    let time = startTime * 60;
+    cup.val = setInterval(() => {
+        time--;
+        if (time === 0) {
+            clearInterval(cup.val);
+            cup.val = null;
+            vscode.window.showInformationMessage('Time for coffee! ☕');
+        }
+    }, 1000);
+}
+
+function showStatusBarMessage(msg) {
     // Create a status bar item
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
 
     // Text for status bar item
-    statusBarItem.text = "Psi4 Executed";
+    statusBarItem.text = msg;
 
     // Set background color for status bar item
     statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
@@ -124,4 +149,4 @@ function showStatusBarMessage() {
     }, 2000);
 }
 
-module.exports = runPsi4Bash;
+module.exports = { runPsi4Bash, timerProductivity };

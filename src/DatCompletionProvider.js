@@ -33,6 +33,13 @@ class DatCompletionProvider {
 
         const keywords = getKeywordsFromYaml();
 
+        if (keywords[0] === null) {
+            vscode.window.showErrorMessage(`Invalid Forte options.yaml file path: ${keywords[1]}`, 'Add path to Forte options.yaml')
+                .then(() => {
+                    vscode.commands.executeCommand('extension.flSettings');
+                });
+        }
+
         // Convert keywords into completion items
         const completionItems = keywords.map(keyword => {
             const item = new vscode.CompletionItem(keyword[0], vscode.CompletionItemKind.Keyword);

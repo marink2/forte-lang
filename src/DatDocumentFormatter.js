@@ -1,6 +1,12 @@
 const vscode = require('vscode');
 
 function formatTextInsideBraces(text) {
+
+    // Get option-value spacing from forte-lang configuration
+    const config = vscode.workspace.getConfiguration('extension');
+    const optSpacing = config.get('configFormatterSpacing');
+    const optIndent = config.get('configFormatterIndent');
+
     // Match 'set { ... }' or 'set forte { ... }' blocks
     const braceContentPattern = /(set\s+forte\s*\{[^}]*\}|set\s*\{[^}]*\})/gmi;
 
@@ -13,12 +19,12 @@ function formatTextInsideBraces(text) {
         const formattedLines = lines.map(line => {
             if (line === '') { return '' }
             // Do not reformat commented lines
-            if (line[0] === '#') { return `  ${line}` }
+            if (line[0] === '#') { return `${' '.repeat(Math.max(0, optIndent))}${line}` }
             const [key, ...rest] = line.split(/\s+/);
             const value = rest.join(' ');
 
             // Format spacing
-            return `  ${key}${' '.repeat(Math.max(1, 40 - key.length))}${value}`;
+            return `${' '.repeat(Math.max(0, optIndent))}${key}${' '.repeat(Math.max(1, optSpacing - key.length))}${value}`;
         });
 
         // Reconstruct the block with formatted lines
