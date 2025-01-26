@@ -11,7 +11,15 @@ This extension offers syntax highlighting, code snippets, option auto-completion
 | ![](assets/syntax_highlighting.gif) | ![](assets/language_support.gif) |
 |-------------------------------------|-----------------------------------|
 
-* **Molecule Viewer**: This feature allows users to highlight any molecule in Cartesian format and plot it (`Cmd/Ctrl + M`) in a webview. Right-clicking inside the webview panel opens a helpful menu with a list of options. Measurements can be made for bond lengths, bond angles, and atomic positions. Double-clicking on the units label (lower-left corner) changes the internal plotting logic (e.g., bond cutoff, atom radii, bond radii, etc.) to better visualize molecules provided in different units (Bohr or Angstrom). *Note: This does not change the units of the molecule itself*.
+* **forte-lang Settings**: Configures custom values for forte-lang parameters. To access these settings, right-click in the editor or open the command palette (`Shift + Cmd/Ctrl + P`) and select `forte-lang: settings`. The currently customizable parameters include:
+
+  * Specifying the path to the Forte `options.yaml` file.
+
+  * Setting the number of spaces between an option and its value in `set { ... }` and `set forte { ... }` blocks.
+
+  * Defining the indentation size for options in `set { ... }` and `set forte { ... }` blocks.
+
+* **Molecule Viewer**: This feature allows users to highlight any molecule in Cartesian format and plot it (`Cmd/Ctrl + M`) in a webview. Right-clicking inside the webview panel opens a helpful menu with a list of options. Measurements can be made for bond lengths, bond angles, and atomic positions. Double-clicking on the units label (lower-left corner) changes the internal plotting logic (i.e., bond cutoff, atom radii, bond radii, etc.) to better visualize molecules provided in different units (Bohr or Angstrom). *Note: This does not change the units of the molecule itself*.
 
 | ![](assets/mol_view.gif) | <img src="assets/mol_view_menu.png" alt="Molecule View Menu" style="width: 800px;">|
 |-------------------------------------|-----------------------------------|
@@ -20,7 +28,7 @@ This extension offers syntax highlighting, code snippets, option auto-completion
 
 ![](assets/orb_plot.gif)
 
-* **Psi4 Run Button**: This feature executes a bash script located in the user’s `$HOME/Bin/` folder. To set up this feature, include a bash script named `fl_psi4_run_bash.sh` in your `$HOME/Bin/` folder with the commands you want to use to execute Psi4 when the button is pressed.
+* **Psi4 Run Button**: This feature executes a bash script (from the user’s `$HOME/Bin/` folder) in the current `.dat` file's working directory. To set up this feature, include a bash script named `fl_psi4_run_bash.sh` in your `$HOME/Bin/` folder with the commands you want to use to execute Psi4 when the button is pressed.
   * Example `fl_psi4_run_bash.sh` file:
 
   ```
@@ -32,6 +40,14 @@ This extension offers syntax highlighting, code snippets, option auto-completion
 ![](assets/run_psi4.gif)
 
 ### Version History
+
+#### 0.0.4
+
+* New Feature: Settings for forte-lang (`RMB` or `Shift + Cmd/Ctrl + P` > `forte-lang: settings`)
+
+* Updated: Orbital plot ordering now uses numeric collation to account for numbers in `.cube` file names
+
+* Fixed: Orbital plotter now correctly handles `.cube` files with trailing empty lines (previously causing the total density to be plotted)
 
 #### 0.0.3
 
