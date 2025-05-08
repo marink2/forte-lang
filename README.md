@@ -1,4 +1,4 @@
-# forte-lang <img src="./logo.png" width="100" style="vertical-align: middle;" />
+# forte-lang <img src="./logo.png" width="40" style="vertical-align: middle"/>
 
 This extension offers syntax highlighting, code snippets, option auto-completion and more  for `.dat` input files used by the Forte [[1]](#1) plugin of the Psi4 [[2]](#2) quantum chemistry package.
 
