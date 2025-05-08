@@ -1,6 +1,7 @@
 {
   "name": "forte-lang",
   "displayName": "forte-lang",
+  "icon": "logo.png",
   "description": "Language support for Forte input.",
   "main": "./src/extension.js",
   "repository": {
