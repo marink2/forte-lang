@@ -1,4 +1,18 @@
-# forte-lang
+<div align="center">
+<h1>
+<img src="logo.png" alt="logo" width="250">
+
+<b>forte-lang</b>
+</h1>
+
+<h3>Your chemistry  tool kit for <a href="https://code.visualstudio.com" target="_blank">Visual Studio Code</a></h3>
+<p style="font-size:10px;">minimum supported version: <b>1.80.0</b></p>
+
+---
+
+<br>
+
+</div>
 
 This extension offers syntax highlighting, code snippets, option auto-completion and more  for `.dat` input files used by the Forte [[1]](#1) plugin of the Psi4 [[2]](#2) quantum chemistry package.
 

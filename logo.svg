@@ -29,10 +29,10 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="2.2848891"
-     inkscape:cx="197.60259"
-     inkscape:cy="63.022754"
+     inkscape:cx="152.74264"
+     inkscape:cy="63.022752"
      inkscape:window-width="1440"
-     inkscape:window-height="872"
+     inkscape:window-height="900"
      inkscape:window-x="128"
      inkscape:window-y="1200"
      inkscape:window-maximized="0"
@@ -8382,7 +8382,10 @@
      inkscape:label="Layer 7">
     <g
        id="g7285-3"
-       transform="matrix(1.7479147,-0.00138138,0.00138138,-1.7479147,37.336835,40.607597)">
+       transform="matrix(1.7479147,-0.00138138,0.00138138,-1.7479147,37.336835,40.607597)"
+       inkscape:export-filename="logo.png"
+       inkscape:export-xdpi="2000"
+       inkscape:export-ydpi="2000">
       <circle
          style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.965699;stroke-dasharray:none;stroke-opacity:1"
          id="path4968-81"
@@ -8405,22 +8408,24 @@
     <g
        aria-label="{"
        id="text10463-0"
-       style="font-size:29.6491px;font-family:monospace;-inkscape-font-specification:'monospace, Normal';stroke-width:0;stroke-linejoin:round;paint-order:markers fill stroke"
+       style="font-size:29.6491px;font-family:monospace;-inkscape-font-specification:'monospace, Normal';stroke-width:0;stroke-linejoin:round;paint-order:markers fill stroke;fill:#67a9f0;fill-opacity:1"
        transform="matrix(1.1767197,0,0,1.1767197,-7.2609877,-2.992448)">
       <path
          d="m 43.576882,29.09334 h -0.614524 c -1.389801,0 -2.393547,-0.376405 -3.011237,-1.129214 -0.608038,-0.743157 -0.912057,-1.598966 -0.912057,-3.62576 v -1.389802 c 0,-1.804811 -0.236459,-3.059493 -0.709378,-3.764046 C 37.856767,18.470315 37.852003,18.113213 36.8,18.113213 v -2.359767 c 1.052003,0 1.056767,-0.352276 1.529686,-1.056828 0.472919,-0.714204 0.709378,-1.973712 0.709378,-3.778523 V 9.5138161 c 0,-2.0171425 0.304019,-2.868126 0.912057,-3.6112837 0.61769,-0.7528092 1.621436,-1.1292138 3.011237,-1.1292138 h 0.614524 v 1.3673333 h -0.434313 c -0.89758,0 -1.524921,0.193028 -1.882023,0.579084 -0.34745,0.386056 -0.521176,1.3077647 -0.521176,2.765126 v 0.9265341 c 0,1.99784 -0.231633,3.469679 -0.694901,4.415516 -0.463266,0.945837 -1.249855,1.645563 -2.359767,2.099179 1.109912,0.463267 1.896501,1.167819 2.359767,2.113656 0.463268,0.945837 0.694901,2.417676 0.694901,4.415516 v 0.926534 c 0,1.457361 0.173726,2.37907 0.521176,2.765126 0.357102,0.386056 0.984443,0.579084 1.882023,0.579084 h 0.434313 z"
          id="path73470"
-         sodipodi:nodetypes="cscssccccsscsccscssscssscscc" />
+         sodipodi:nodetypes="cscssccccsscsccscssscssscscc"
+         style="fill:#67a9f0;fill-opacity:1" />
     </g>
     <g
        aria-label="{"
        id="text10463-0-0"
-       style="font-size:29.6491px;font-family:monospace;-inkscape-font-specification:'monospace, Normal';stroke-width:0;stroke-linejoin:round;paint-order:markers fill stroke"
+       style="font-size:29.6491px;font-family:monospace;-inkscape-font-specification:'monospace, Normal';stroke-width:0;stroke-linejoin:round;paint-order:markers fill stroke;fill:#67a9f0;fill-opacity:1"
        transform="matrix(-1.1767197,0,0,1.1767197,113.21225,-2.992448)">
       <path
          d="m 43.576882,29.09334 h -0.614524 c -1.389801,0 -2.393547,-0.376405 -3.011237,-1.129214 -0.608038,-0.743157 -0.912057,-1.598966 -0.912057,-3.62576 v -1.389802 c 0,-1.804811 -0.236459,-3.059493 -0.709378,-3.764046 C 37.856767,18.470315 37.852003,18.113213 36.8,18.113213 v -2.359767 c 1.052003,0 1.056767,-0.352276 1.529686,-1.056828 0.472919,-0.714204 0.709378,-1.973712 0.709378,-3.778523 V 9.5138161 c 0,-2.0171425 0.304019,-2.868126 0.912057,-3.6112837 0.61769,-0.7528092 1.621436,-1.1292138 3.011237,-1.1292138 h 0.614524 v 1.3673333 h -0.434313 c -0.89758,0 -1.524921,0.193028 -1.882023,0.579084 -0.34745,0.386056 -0.521176,1.3077647 -0.521176,2.765126 v 0.9265341 c 0,1.99784 -0.231633,3.469679 -0.694901,4.415516 -0.463266,0.945837 -1.249855,1.645563 -2.359767,2.099179 1.109912,0.463267 1.896501,1.167819 2.359767,2.113656 0.463268,0.945837 0.694901,2.417676 0.694901,4.415516 v 0.926534 c 0,1.457361 0.173726,2.37907 0.521176,2.765126 0.357102,0.386056 0.984443,0.579084 1.882023,0.579084 h 0.434313 z"
          id="path73470-4"
-         sodipodi:nodetypes="cscssccccsscsccscssscssscscc" />
+         sodipodi:nodetypes="cscssccccsscsccscssscssscscc"
+         style="fill:#67a9f0;fill-opacity:1" />
     </g>
   </g>
 </svg>
